@@ -141,3 +141,31 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 ### D-21: Show Lasso feature selection with stronger penalties  (Section D)
 - Why: at the tuned α = 0.1 Lasso keeps all 10 features, so we refit with α = 1, 3, 5, 10 to show which features it drops first (s2 at α = 1; then age and s4 at α = 3).
 - Likely viva question → *"Which features did Lasso remove and why?"* s2 first, because it is 0.90 correlated with s1 and so mostly redundant; then age and s4, which add little once the others are known.
+
+### D-22: `class_weight="balanced"` where supported; no SMOTE  (Section E)
+- Chosen: balanced class weights for Logistic Regression, Decision Tree, Random Forest and SVM. KNN, Gaussian NB and Gradient Boosting have no such option and are left as they are.
+- Why: about 35% are diabetic; weighting each class by $n / (2 n_c)$ makes missing a diabetic cost more, with no synthetic data. The three unweighted models had the lowest CV recall (0.565–0.598).
+- Trade-off: the comparison is not perfectly equal (three models lack weighting).
+- Likely viva question → *"Why not SMOTE?"* Class weights solve the same problem with one argument and no fake patients; CLAUDE.md also rules SMOTE out.
+
+### D-23: Tune Logistic Regression and SVM on ROC-AUC  (Section E)
+- Chosen: the top two by CV ROC-AUC (LR 0.844, SVM 0.837; they also had the two highest recalls). LR grid: `C ∈ {0.01, 0.1, 1, 10}`. SVM grid: `C ∈ {0.1, 1, 10}`, `gamma ∈ {scale, 0.01, 0.1}`.
+- Result: LR C = 0.1 → 0.8450; SVM C = 1, gamma = 0.01 → 0.8493. Final classifier = tuned SVM (higher CV ROC-AUC).
+- Why ROC-AUC: see D-07; recall is raised afterwards with the threshold.
+- Likely viva question → *"Is SVM really better than Logistic Regression?"* Not meaningfully: a gap of 0.004 is inside the CV std (about 0.02–0.03).
+
+### D-24: Labels from probabilities, not `predict()`  (Section E)
+- Chosen: `y_pred = (predict_proba >= t)`.
+- Why: for SVM, `predict()` uses the decision score while `predict_proba` comes from a separately fitted probability model, so the two can disagree. Using probabilities everywhere means the 0.5 results and the threshold analysis follow the same rule.
+
+### D-25: Screening threshold t = 0.30, chosen on training CV  (Section E)
+- Options considered: keep 0.5; pick t on the test set; pick t from out-of-fold training probabilities.
+- Chosen: the highest threshold whose training-CV recall ≥ 0.75 → t = 0.30 (CV recall 0.780, precision 0.592, 45.9% flagged).
+- Why: picking t on the test set would be leakage. The highest qualifying t keeps false alarms as low as possible while meeting the target.
+- Result on test: recall 0.50 → 0.796 (27 → 43 of 54 diabetics caught); false alarms 18 → 33; precision 0.566.
+- Trade-off: almost half the patients are flagged for follow-up testing.
+- Likely viva question → *"Why 0.30 and not 0.5?"* At 0.5 we missed half the diabetics (test recall 0.50). For screening, a missed diabetic is worse than an extra blood test.
+
+### D-26: Hide scikit-learn's FutureWarning for `SVC(probability=True)`  (Section E)
+- Why: scikit-learn 1.9 marks `probability=True` as deprecated (to be removed in 1.11) but it still works in our pinned version, and CLAUDE.md asks for it. The warning would only clutter the output.
+- Trade-off: upgrading scikit-learn past 1.10 would require `CalibratedClassifierCV` instead.

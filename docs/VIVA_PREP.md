@@ -146,3 +146,40 @@ With R² ≈ 0.46 the model cannot explain much of the extreme cases, so it pull
 
 **Q43. Is Lasso really better than Ridge if the difference is only 0.0004?**
 No. We picked it by a fixed rule (highest CV score), but the gap is far inside the CV std (about 0.04).
+
+---
+
+## Rubric 3: Classification (Section E)
+
+**Q44. Which classifier won, and is the win meaningful?**
+Tuned SVM (CV ROC-AUC 0.8493), just ahead of tuned Logistic Regression (0.8450). The gap is inside the CV std (about 0.02–0.03), so they are practically equal.
+
+**Q45. Why tune on ROC-AUC if recall is the main metric?**
+Recall alone can be maximised by calling everyone diabetic. ROC-AUC measures how well the model ranks patients; we then get the recall we need by lowering the threshold.
+
+**Q46. Why is accuracy misleading here?**
+The top five models all have CV accuracy of about 0.76, yet their recall ranges from 0.598 to 0.762. Accuracy hides how many diabetics are missed.
+
+**Q47. Test recall at 0.5 was only 0.50. Why?**
+The SVM's probabilities are calibrated to the real 35% diabetic rate, so few patients reach 0.5. The ranking is good (ROC-AUC 0.810), but 0.5 is the wrong cut-off for screening.
+
+**Q48. How did you choose the threshold, and why not on the test set?**
+From out-of-fold training probabilities (`cross_val_predict`): the highest t with CV recall ≥ 0.75, which gave 0.30. Choosing it on the test set would be leakage, because the test score would no longer be an honest estimate.
+
+**Q49. What did lowering the threshold cost?**
+Test recall went from 0.50 to 0.796 (16 more diabetics caught), but false alarms went from 18 to 33 and precision fell to 0.566.
+
+**Q50. Did you meet the classification success criteria?**
+Yes: test recall 0.796 (≥ 0.75) at t = 0.30 and test ROC-AUC 0.810 (≥ 0.80).
+
+**Q51. What do C and gamma do in the SVM?**
+C: how much training errors are punished (large C = fits the training data more tightly). Gamma: how far each patient's influence reaches (large gamma = a very curvy boundary). The best gamma = 0.01 was small, so a smooth boundary works best.
+
+**Q52. Why do Random Forest and the Decision Tree have train ROC-AUC = 1.000?**
+Fully grown trees memorise the training data. The gap to CV (0.820 and 0.640) shows overfitting; averaging many trees (Random Forest) reduces it but does not remove it.
+
+**Q53. Why did KNN, Naive Bayes and Gradient Boosting have low recall?**
+They have no `class_weight` option, so they are not pushed to care more about the minority diabetic class (recall 0.565–0.598).
+
+**Q54. Why use `predict_proba >= t` instead of `predict()`?**
+For SVM, `predict()` uses the decision score, which can disagree with the probability model. Using probabilities everywhere keeps the 0.5 results and the threshold analysis consistent.

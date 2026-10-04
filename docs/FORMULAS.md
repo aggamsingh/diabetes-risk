@@ -131,4 +131,33 @@ $$\text{MAE} = \frac{1}{n}\sum_i |y_i - \hat{y}_i| \qquad \text{MSE} = \frac{1}{
 For every hyperparameter value in the grid, run k-fold CV and record the mean score. Pick the value with the highest mean, then refit with it on the whole training set.
 - **Intuition:** a systematic trial-and-error search that uses only training data (via CV), so the test set stays untouched.
 
-*Sections still to come: classification models and metrics, and explainability.*
+---
+
+## 8. Classification models (Section E.1)
+
+| Model | Formula | Symbols | Intuition |
+|---|---|---|---|
+| Logistic Regression | $\hat{p} = \sigma(z) = \frac{1}{1+e^{-z}}$, $z = \beta_0 + \sum_j \beta_j x_j$ | $\sigma$ = sigmoid, squashes any number into (0, 1) | A linear score turned into a probability |
+| Log-loss (binary cross-entropy) | $L = -\frac{1}{n}\sum_i [y_i \log\hat{p}_i + (1-y_i)\log(1-\hat{p}_i)]$ | $y_i$ = 0/1, $\hat{p}_i$ = predicted probability | Punishes confident wrong answers heavily; LR minimises it |
+| Odds ratio | $\text{OR}_j = e^{\beta_j}$ | $\beta_j$ = coefficient | A 1-unit (here 1-SD) increase in $x_j$ multiplies the odds by $e^{\beta_j}$ (used in Section G) |
+| KNN | $d(a,b) = \sqrt{\sum_j (a_j - b_j)^2}$; predict the majority class of the $k$ nearest | $k = 5$ | Similar patients share outcomes |
+| Gaussian Naive Bayes | $P(y \mid \mathbf{x}) \propto P(y)\prod_j P(x_j \mid y)$, each $P(x_j \mid y)$ a normal curve | $P(y)$ = class prior | Bayes' theorem + "features are independent within a class" |
+| Gini impurity | $G = 1 - \sum_c p_c^2$ | $p_c$ = share of class $c$ in a node | 0 = pure node; a tree picks the split with the largest drop in $G$ |
+| Entropy / information gain | $H = -\sum_c p_c \log_2 p_c$; gain = $H_\text{parent} - \sum \frac{n_\text{child}}{n} H_\text{child}$ | | Alternative split criterion (sklearn default is Gini) |
+| Random Forest | $\hat{y} = \text{mode}\{T_1(x), \dots, T_B(x)\}$ | $B$ trees on bootstrap samples | Voting reduces the overfitting of single trees |
+| SVM | maximise margin $\frac{2}{\lVert w\rVert}$, with errors penalised by $C$ | $w$ = weight vector, $C$ = error penalty | The widest "street" between the classes |
+| RBF kernel | $K(a,b) = e^{-\gamma\lVert a-b\rVert^2}$ | $\gamma$ = reach of each point | Lets the SVM draw curved boundaries; small $\gamma$ = smoother |
+| Balanced class weight | $w_c = \frac{n}{k\, n_c}$ | $n$ = samples, $k$ = 2 classes, $n_c$ = samples in class $c$ | Rare class errors cost more |
+
+## 9. Classification metrics (Section E.2)
+
+| | Predicted 0 | Predicted 1 |
+|---|---|---|
+| **Actual 0** | TN | FP (false alarm) |
+| **Actual 1** | FN (missed diabetic) | TP |
+
+$$\text{Accuracy} = \frac{TP+TN}{\text{all}} \quad \text{Precision} = \frac{TP}{TP+FP} \quad \text{Recall} = \frac{TP}{TP+FN} \quad \text{Specificity} = \frac{TN}{TN+FP} \quad F_1 = \frac{2PR}{P+R}$$
+- **ROC curve:** TPR (= recall) against FPR $= \frac{FP}{FP+TN}$ (= 1 − specificity) as the threshold moves from 1 to 0. **AUC** = the area under it = the probability that a random diabetic gets a higher score than a random non-diabetic.
+- **Threshold effect:** predict 1 if $\hat{p} \ge t$. Lowering $t$ → more TP and FP → recall ↑, precision ↓ (Section E.5).
+
+*Section still to come: explainability.*
