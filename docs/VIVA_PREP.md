@@ -112,3 +112,37 @@ With 353 training rows (Progression), 10 folds would leave only about 35 rows pe
 
 **Q33. Why does the Progression pipeline have an imputer if there are no missing values?**
 It does nothing there; we reuse the same helper functions for both tasks to keep the code simple and consistent.
+
+---
+
+## Rubric 3: Regression (Section D)
+
+**Q34. Which regression model won, and why?**
+The linear models (Ridge 0.481, Lasso 0.481, Linear 0.480 CV R²) beat the trees and KNN. The relationship between the features and progression is mostly linear, and with only 353 training patients the flexible models overfit (Random Forest train R² 0.920 vs CV 0.398).
+
+**Q35. What does R² = 0.456 actually mean?**
+The model explains about 46% of the variation in progression for unseen patients. The other 54% depends on things not in the data (or is noise). Its typical error (RMSE) is about 54 points, against 73 for the mean baseline.
+
+**Q36. Did you meet the success criterion?**
+Yes: test R² = 0.456 (target ≥ 0.40), clearly above the baseline (−0.012).
+
+**Q37. Why did the Decision Tree get a negative R²?**
+An unpruned tree grows until it memorises the training data (train R² 1.000), so it fits noise and does worse than the mean on new patients (CV R² −0.106).
+
+**Q38. Why is s1 (total cholesterol) negative, when cholesterol is bad?**
+s1 and s2 are 0.90 correlated. The model gives one a big negative weight and the other a big positive one, and they partly cancel out. The coefficients of correlated features should not be read one at a time. Ridge and Lasso reduce this effect (s1 goes from −44 to −29).
+
+**Q39. What does a coefficient of +26 for bmi mean?**
+Because the features are standardised, a BMI 1 standard deviation higher (about 4.4 kg/m²) predicts about 26 points more progression, keeping all other features fixed.
+
+**Q40. Ridge vs Lasso: what is the difference?**
+Both add a penalty on coefficient size. Ridge ($\alpha\sum\beta^2$) shrinks all coefficients but never to exactly 0. Lasso ($\alpha\sum|\beta|$) can set weak ones to exactly 0, so it also selects features.
+
+**Q41. Which features did Lasso drop?**
+None at the tuned α = 0.1. With stronger penalties it drops s2 first (α = 1, redundant with s1), then age and s4 (α = 3).
+
+**Q42. Why does the predicted-vs-actual plot show high values under-predicted?**
+With R² ≈ 0.46 the model cannot explain much of the extreme cases, so it pulls its predictions towards the middle.
+
+**Q43. Is Lasso really better than Ridge if the difference is only 0.0004?**
+No. We picked it by a fixed rule (highest CV score), but the gap is far inside the CV std (about 0.04).

@@ -96,9 +96,39 @@ Each class keeps the same proportion in train and test: $\frac{n_{1,\text{train}
 - **Used in:** Section C.1 (0.349 vs 0.351 diabetic).
 
 ### k-fold cross-validation
-$$\text{CV score} = \frac{1}{k}\sum_{i=1}^{k} \text{score}_i, \qquad \text{CV std} = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k}(\text{score}_i - \text{CV score})^2}$$
+$$\text{CV score} = \frac{1}{k}\sum_{i=1}^{k} \text{score}_i, \qquad \text{CV std} = \sqrt{\frac{1}{k}\sum_{i=1}^{k}(\text{score}_i - \text{CV score})^2}$$
 - $k$: number of folds (5); $\text{score}_i$: score when fold $i$ is held out and the model is trained on the other $k-1$ folds.
 - **Intuition:** every training row is used for validation exactly once; the mean is a fairer estimate than one split, and the std shows how stable the model is.
-- **Used in:** Section C.4; all model comparisons in D, E, F.
+- **Used in:** Section C.4; all model comparisons in D, E, F. (NumPy's `.std()` divides by $k$, not $k-1$.)
 
-*Sections still to come: regression models, classification models, the remaining metrics, grid search, and explainability.*
+---
+
+## 5. Regression models (Section D.1)
+
+| Model | Formula | Symbols | Intuition |
+|---|---|---|---|
+| Baseline | $\hat{y} = \bar{y}$ | $\bar{y}$ = training mean | The "do nothing" model; $R^2 \approx 0$ |
+| Linear Regression (OLS) | $\hat{y} = \beta_0 + \sum_j \beta_j x_j$, minimise $\sum_i (y_i - \hat{y}_i)^2$ | $\beta_0$ intercept, $\beta_j$ coefficient of feature $j$ | Best straight-line (hyperplane) fit |
+| Ridge | minimise $\sum_i (y_i - \hat{y}_i)^2 + \alpha \sum_j \beta_j^2$ | $\alpha$ = penalty strength | Shrinks all coefficients; stabilises correlated features |
+| Lasso | minimise $\sum_i (y_i - \hat{y}_i)^2 + \alpha \sum_j \lvert\beta_j\rvert$ | same | The absolute-value penalty can set coefficients to exactly 0 (feature selection) |
+| KNN regression | $\hat{y} = \frac{1}{k}\sum_{i \in N_k(x)} y_i$ | $N_k(x)$ = the $k$ nearest training patients (Euclidean distance) | Similar patients have similar outcomes |
+| Decision tree (regression) | choose the split minimising $\frac{n_L}{n}\text{MSE}_L + \frac{n_R}{n}\text{MSE}_R$ | $n_L, n_R$ = patients in left/right child | Each split makes the groups more uniform (lower variance); a leaf predicts its mean |
+| Random forest | $\hat{y} = \frac{1}{B}\sum_{b=1}^{B} T_b(x)$ | $B$ trees, each on a bootstrap sample with random feature subsets | Averaging many noisy trees reduces variance (overfitting) |
+| Gradient boosting | $F_m(x) = F_{m-1}(x) + \eta\, h_m(x)$ | $h_m$ = small tree fitted to the residuals $y - F_{m-1}(x)$, $\eta$ = learning rate | Each new tree corrects the previous errors a little |
+
+**Why Lasso can reach exactly 0 but Ridge cannot:** the Ridge penalty $\beta^2$ has slope $2\beta$, which becomes tiny near 0, so it only pushes coefficients *towards* 0. The Lasso penalty $\lvert\beta\rvert$ has a constant slope ($\pm 1$), so it keeps pushing until a weak coefficient lands exactly on 0.
+
+## 6. Regression metrics (Section D.2)
+
+$$\text{MAE} = \frac{1}{n}\sum_i |y_i - \hat{y}_i| \qquad \text{MSE} = \frac{1}{n}\sum_i (y_i - \hat{y}_i)^2 \qquad \text{RMSE} = \sqrt{\text{MSE}} \qquad R^2 = 1 - \frac{SS_{res}}{SS_{tot}}$$
+- MAE: the average absolute error, in target units; not sensitive to a few big errors.
+- MSE: squares the errors, so big errors count much more; its units are squared.
+- RMSE: back in target units; the "typical" error size, and it punishes big errors more than MAE.
+- $R^2$: the share of variance explained, compared with always predicting the mean (see Section 3).
+- **Residual:** $e_i = y_i - \hat{y}_i$, plotted against $\hat{y}_i$ to check for patterns (Section D.4).
+
+## 7. Grid search (Section D.3)
+For every hyperparameter value in the grid, run k-fold CV and record the mean score. Pick the value with the highest mean, then refit with it on the whole training set.
+- **Intuition:** a systematic trial-and-error search that uses only training data (via CV), so the test set stays untouched.
+
+*Sections still to come: classification models and metrics, and explainability.*

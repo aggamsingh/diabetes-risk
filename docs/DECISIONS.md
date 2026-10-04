@@ -119,3 +119,25 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 ### D-17: No confidence band on the regression scatter plots  (Section B)
 - Chosen: `sns.regplot(..., ci=None)`.
 - Why: the band is computed by random resampling, which made the figure change on every run; without it, the plot is simpler and identical every time.
+
+### D-18: Include a mean-only baseline  (Section D)
+- Chosen: `DummyRegressor()` (always predicts the training mean) in the comparison.
+- Why: our success criterion says "clearly beat the mean baseline"; it also shows that a model with negative R² (Decision Tree, CV −0.106) is worse than doing nothing.
+- Likely viva question → *"What does negative R² mean?"* The model's predictions are worse than just predicting the average.
+
+### D-19: Tune Ridge and Lasso on alpha only, scored by R²  (Section D)
+- Options considered: tune the top two by CV R² (Ridge 0.481, Lasso 0.481); tune the best linear + best tree model.
+- Chosen: Ridge and Lasso (the rule: best two models), grid `alpha ∈ {0.01, 0.1, 1, 10, 100}`, 5-fold CV, `scoring="r2"`.
+- Why: alpha is the only hyperparameter that matters for these models. R² is the metric in our success criterion.
+- Trade-off: both are linear, so tuning cannot add much; Ridge stayed at α = 1 (0.4808), Lasso moved to α = 0.1 (0.4812).
+- Likely viva question → *"Why only one hyperparameter?"* Ridge and Lasso have just the penalty strength; the other settings (like the intercept) are not tuning choices.
+
+### D-20: Final regressor = tuned Lasso (α = 0.1)  (Section D)
+- Chosen: the tuned model with the higher CV R² (Lasso 0.4812 vs Ridge 0.4808).
+- Why: a fixed rule (highest CV score) decided before looking at the test set. The difference is tiny (far inside the CV std of about 0.04), so Ridge or Linear Regression would be equally good.
+- Result: test R² = 0.456, RMSE = 53.71, MAE = 42.81 (baseline R² −0.012), which meets the success criterion.
+- Likely viva question → *"Is Lasso really better than Ridge?"* No, not meaningfully. They are within 0.0004 in CV R², so the choice barely matters.
+
+### D-21: Show Lasso feature selection with stronger penalties  (Section D)
+- Why: at the tuned α = 0.1 Lasso keeps all 10 features, so we refit with α = 1, 3, 5, 10 to show which features it drops first (s2 at α = 1; then age and s4 at α = 3).
+- Likely viva question → *"Which features did Lasso remove and why?"* s2 first, because it is 0.90 correlated with s1 and so mostly redundant; then age and s4, which add little once the others are known.
