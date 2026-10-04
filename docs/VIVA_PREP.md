@@ -183,3 +183,31 @@ They have no `class_weight` option, so they are not pushed to care more about th
 
 **Q54. Why use `predict_proba >= t` instead of `predict()`?**
 For SVM, `predict()` uses the decision score, which can disagree with the probability model. Using probabilities everywhere keeps the 0.5 results and the threshold analysis consistent.
+
+---
+
+## Rubric 4: Comparative Performance Analysis (Section F)
+
+**Q55. Which models overfit, and how can you tell?**
+The tree models: Decision Tree train R² 1.000 vs CV −0.106; Random Forest 0.920 vs 0.398; in classification both trees reach train ROC-AUC 1.000. A big train-vs-CV gap means the model memorised the training data. The linear models' train, CV and test scores are close.
+
+**Q56. Is SVM really better than Logistic Regression?**
+No, not meaningfully. Tuned CV ROC-AUC is 0.849 vs 0.845, a gap far below the CV std (0.02–0.03). On the test set they are 0.810 vs 0.810.
+
+**Q57. Tuning made the test score slightly worse. Was tuning a mistake?**
+No. The changes are tiny (SVM 0.8139 → 0.8096) and within the noise of a 154-patient test set. On small data, the defaults were already good, and tuning mainly fits noise in the CV folds. That is a valid finding.
+
+**Q58. Gradient Boosting had the best test ROC-AUC (0.831). Why not choose it?**
+We chose models by CV before looking at the test set. Picking the test winner would be leakage, and its CV ROC-AUC (0.819) was lower than SVM's and Logistic Regression's.
+
+**Q59. Is Random Forest better *enough* than Logistic Regression to justify being harder to interpret?**
+No. It is actually lower in CV ROC-AUC (0.820 vs 0.844) and overfits (train 1.000). Logistic Regression is both as accurate and far easier to explain.
+
+**Q60. Why do the linear models win in regression?**
+Progression rises roughly linearly with bmi, s5 and bp, and with only 353 training patients the flexible models fit noise. Simple models generalise better on small, mostly linear data.
+
+**Q61. How do you read the error bars in the bar chart?**
+Each bar is the CV mean; the line is ± 1 std across the 5 folds. If two models' error bars overlap a lot, we cannot say one is truly better.
+
+**Q62. Why does the Decision Tree's ROC curve look like a few straight lines?**
+A fully grown tree outputs almost only 0 or 1 as its probability, so there are very few distinct thresholds to draw the curve with.

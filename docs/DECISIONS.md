@@ -169,3 +169,12 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 ### D-26: Hide scikit-learn's FutureWarning for `SVC(probability=True)`  (Section E)
 - Why: scikit-learn 1.9 marks `probability=True` as deprecated (to be removed in 1.11) but it still works in our pinned version, and CLAUDE.md asks for it. The warning would only clutter the output.
 - Trade-off: upgrading scikit-learn past 1.10 would require `CalibratedClassifierCV` instead.
+
+### D-27: Keep the CV-selected final models even though the test set ranks others higher  (Section F)
+- Observation: on the test set, untuned Lasso (0.4669) beats tuned Lasso (0.4555), and Gradient Boosting has the highest test ROC-AUC (0.831 vs 0.810 for tuned SVM).
+- Chosen: keep tuned Lasso and tuned SVM, which were selected by cross-validation before the test set was used.
+- Why: choosing a model *because* it scored best on the test set turns the test set into a validation set, and its score is then no longer an honest estimate. The test differences (≤ 0.02) are also within the CV noise.
+- Likely viva question → *"Gradient Boosting had the best test AUC. Why didn't you pick it?"* We fixed the selection rule (best CV score) in advance; 0.02 on 154 patients is noise, and its CV ROC-AUC (0.819) was clearly lower.
+
+### D-28: Test recall in the comparison table uses `predict()`  (Section F)
+- Why: the CV recall in E.2 (from `cross_validate`) uses each model's `predict()`, so the test column uses the same rule to be comparable. The screening result with threshold 0.30 (E.5) is reported separately.
