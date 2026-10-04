@@ -87,3 +87,28 @@ HDL is "good" cholesterol; higher HDL is generally protective, so it goes with l
 
 **Q26. Why do you need feature scaling?**
 The features have very different ranges (Insulin up to 846, DiabetesPedigreeFunction below 2.5). Distance-based (KNN, SVM) and coefficient-based (linear, logistic) models would otherwise be dominated by the large-valued features.
+
+---
+
+## Rubric 3: Preprocessing (Section C)
+
+**Q27. What is data leakage? Give an example from this project.**
+Information from the test set influencing training. Example: computing the Insulin median or the scaler's mean/std on all 768 patients before splitting; the test patients would then have shaped the preprocessing.
+
+**Q28. How does a Pipeline prevent leakage?**
+`pipeline.fit(X_train)` learns the medians, means and stds from the training data only; `predict(X_test)` only *applies* them. In cross-validation the pipeline is refitted inside each fold, so even the validation fold is never seen during fitting.
+
+**Q29. How can you show the pipeline really used only training data?**
+In C.3 the training medians differ slightly from the full-data medians (BMI 32.4 vs 32.3), and after scaling the test-set means are not exactly 0 (Insulin 0.188), while the training means are 0.
+
+**Q30. Why use `stratify=y`?**
+To keep the same ~35% diabetics in train and test (we got 0.349 vs 0.351). Otherwise, by chance, the small test set could have too few or too many diabetics.
+
+**Q31. Why don't tree models need scaling?**
+Trees split on one feature at a time ("Glucose > 127?"). Rescaling a feature moves the threshold but selects exactly the same patients.
+
+**Q32. Why 5 folds and not 10?**
+With 353 training rows (Progression), 10 folds would leave only about 35 rows per validation fold, giving noisy scores. 5 folds is a common, balanced choice.
+
+**Q33. Why does the Progression pipeline have an imputer if there are no missing values?**
+It does nothing there; we reuse the same helper functions for both tasks to keep the code simple and consistent.

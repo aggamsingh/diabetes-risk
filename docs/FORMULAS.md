@@ -78,4 +78,27 @@ $$R^2 = 1 - \frac{\sum_i (y_i - \hat{y}_i)^2}{\sum_i (y_i - \bar{y})^2} = 1 - \f
 
 ---
 
-*Sections still to come: preprocessing, regression models, classification models, the remaining metrics, validation, and explainability.*
+## 4. Preprocessing and validation
+
+### Median imputation
+Each missing value in column $j$ is replaced with $\text{median}(x_j)$ computed on the **training set only**.
+- **Intuition:** fills gaps with a typical value that is not pulled by skew or outliers.
+- **Used in:** Section C.2 (`SimpleImputer(strategy="median")`).
+
+### Standardisation (z-score)
+$$z = \frac{x - \mu}{\sigma}$$
+- $x$: original value; $\mu$, $\sigma$: mean and standard deviation of that feature in the **training set**.
+- **Intuition:** puts every feature on the same scale (mean 0, std 1), so no feature dominates because of its units.
+- **Used in:** Section C.2 (`StandardScaler`), all scaled pipelines.
+
+### Stratified split
+Each class keeps the same proportion in train and test: $\frac{n_{1,\text{train}}}{n_\text{train}} \approx \frac{n_{1,\text{test}}}{n_\text{test}} \approx \frac{n_1}{n}$.
+- **Used in:** Section C.1 (0.349 vs 0.351 diabetic).
+
+### k-fold cross-validation
+$$\text{CV score} = \frac{1}{k}\sum_{i=1}^{k} \text{score}_i, \qquad \text{CV std} = \sqrt{\frac{1}{k-1}\sum_{i=1}^{k}(\text{score}_i - \text{CV score})^2}$$
+- $k$: number of folds (5); $\text{score}_i$: score when fold $i$ is held out and the model is trained on the other $k-1$ folds.
+- **Intuition:** every training row is used for validation exactly once; the mean is a fairer estimate than one split, and the std shows how stable the model is.
+- **Used in:** Section C.4; all model comparisons in D, E, F.
+
+*Sections still to come: regression models, classification models, the remaining metrics, grid search, and explainability.*

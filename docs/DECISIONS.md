@@ -87,3 +87,35 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 - Why: the flagged values are plausible real patients (e.g. high insulin or pedigree scores), not errors, and the datasets are small (at most 29 flagged in any one column).
 - Trade-off: extreme values can pull linear models; tree models are hardly affected.
 - Likely viva question → *"You found outliers. Why didn't you remove them?"* An outlier is not the same as an error; removing real high-risk patients would bias the model.
+
+### D-13: 80/20 split, stratified for Pima  (Section C)
+- Options considered: 70/30; 80/20; stratified vs plain random.
+- Chosen: 80/20 with `random_state=42`; `stratify=y` for Pima, plain random for Progression (continuous target).
+- Why: 80% keeps enough data for training on small datasets; 20% (154 / 89 patients) is still a usable test set. Stratification kept the diabetic share at 0.349 (train) vs 0.351 (test).
+- Trade-off: a single test set of 89–154 patients is noisy (Progression test mean 145.78 vs train 153.74), which is why we also rely on CV mean ± std.
+- Likely viva question → *"Why stratify?"* So the small test set has the same ~35% of diabetics as the full data; otherwise recall and precision could be distorted by chance.
+
+### D-14: All preprocessing inside a Pipeline, via two helper functions  (Section C)
+- Options considered: preprocess the whole dataset once before splitting; fit preprocessing on the training set by hand; use `Pipeline`.
+- Chosen: `make_scaled_pipeline(model)` (median imputer → StandardScaler → model) and `make_unscaled_pipeline(model)` (median imputer → model).
+- Why: a Pipeline is refitted inside every CV fold and on the training set only, so medians, means and stds never see validation/test data. The check in C.3 shows training medians differ slightly from full-data medians (BMI 32.4 vs 32.3), and scaled test means are not exactly 0 (Insulin 0.188).
+- Trade-off: slightly more code than preprocessing once; the two functions avoid repeating it 14 times.
+- Likely viva question → *"What is data leakage and how did you prevent it?"* Test information leaking into training. Split first, then learn all preprocessing inside a Pipeline from the training data only.
+
+### D-15: Which models are scaled  (Section C)
+- Options considered: scale every model; scale only the models that need it.
+- Chosen: scale Linear/Ridge/Lasso, Logistic Regression, KNN, SVM; do not scale Decision Tree, Random Forest, Gradient Boosting, Gaussian Naive Bayes.
+- Why: distance- and coefficient-based models are affected by feature units. Trees split on one feature at a time using thresholds, so units do not change the result. Gaussian NB fits a separate distribution per feature.
+- Trade-off: none of importance (scaling the trees would be harmless, just unnecessary).
+- Likely viva question → *"Why don't trees need scaling?"* A split like "Glucose > 127" picks the same patients whether Glucose is in mg/dL or standardised.
+
+### D-16: 5-fold CV with shuffling  (Section C)
+- Options considered: k = 5 or 10; shuffled or not.
+- Chosen: `StratifiedKFold(5, shuffle=True, random_state=42)` for Pima, `KFold(5, shuffle=True, random_state=42)` for Progression.
+- Why: with 614 / 353 training rows, 5 folds leaves about 123 / 71 rows per validation fold, which is large enough to give a stable score. 10 folds would make each validation fold very small. Shuffling with a fixed seed removes any ordering in the file while staying reproducible.
+- Trade-off: 5 scores give a rough estimate of the std.
+- Likely viva question → *"Why cross-validation rather than one validation split?"* One split depends on luck; averaging 5 folds gives a more reliable score plus a spread (std).
+
+### D-17: No confidence band on the regression scatter plots  (Section B)
+- Chosen: `sns.regplot(..., ci=None)`.
+- Why: the band is computed by random resampling, which made the figure change on every run; without it, the plot is simpler and identical every time.
