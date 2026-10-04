@@ -160,4 +160,28 @@ $$\text{Accuracy} = \frac{TP+TN}{\text{all}} \quad \text{Precision} = \frac{TP}{
 - **ROC curve:** TPR (= recall) against FPR $= \frac{FP}{FP+TN}$ (= 1 − specificity) as the threshold moves from 1 to 0. **AUC** = the area under it = the probability that a random diabetic gets a higher score than a random non-diabetic.
 - **Threshold effect:** predict 1 if $\hat{p} \ge t$. Lowering $t$ → more TP and FP → recall ↑, precision ↓ (Section E.5).
 
-*Section still to come: explainability.*
+---
+
+## 10. Explainability (Section G)
+
+### Odds ratio (Logistic Regression)
+$$\log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j x_j \quad\Rightarrow\quad \text{OR}_j = e^{\beta_j}$$
+- $\frac{p}{1-p}$ = odds of diabetes. Increasing $x_j$ by 1 (here 1 SD) multiplies the odds by $e^{\beta_j}$. OR > 1 raises risk, OR < 1 lowers it.
+- **Used in:** Section G.1 (Glucose OR = 2.78).
+
+### Permutation importance
+$$\text{importance}_j = \text{score}(X) - \frac{1}{R}\sum_{r=1}^{R}\text{score}(X \text{ with column } j \text{ shuffled, repeat } r)$$
+- $R$ = 20 repeats; score = test ROC-AUC.
+- **Intuition:** if breaking the link between a feature and the target hurts the score, the model was using that feature. Works for any model.
+- **Used in:** Section G.2.
+
+### Shapley value
+$$\phi_j = \sum_{S \subseteq F \setminus \{j\}} \frac{|S|!\,(|F|-|S|-1)!}{|F|!}\,\big[f(S \cup \{j\}) - f(S)\big]$$
+- $F$ = all features; $S$ = a subset not containing $j$; $f(S)$ = the prediction when only the features in $S$ are known (the others are filled from the background data).
+- **Intuition:** imagine adding the features one at a time in every possible order; $\phi_j$ is feature $j$'s average extra contribution when it joins. This is the only "fair" way to split the credit (it satisfies symmetry, efficiency and the "dummy" property).
+- **Used in:** Section G.3–G.5.
+
+### SHAP additivity
+$$f(x) = E[f(X)] + \sum_j \phi_j(x)$$
+- $E[f(X)]$ = base value (the average prediction over the background); the SHAP values add up exactly to this patient's prediction.
+- **Used in:** Section G.5 waterfall plots (e.g. 0.287 + contributions = 0.932 for the caught diabetic).

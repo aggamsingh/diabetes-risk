@@ -211,3 +211,40 @@ Each bar is the CV mean; the line is ± 1 std across the 5 folds. If two models'
 
 **Q62. Why does the Decision Tree's ROC curve look like a few straight lines?**
 A fully grown tree outputs almost only 0 or 1 as its probability, so there are very few distinct thresholds to draw the curve with.
+
+---
+
+## Rubric 5: Explainability & Interpretation (Section G)
+
+**Q63. What are the top drivers of diabetes risk according to the models?**
+Glucose, then BMI, Pregnancies, DiabetesPedigreeFunction (family history) and Age. All four methods (LR coefficients, permutation importance for SVM and LR, SHAP for SVM) give exactly this top five, in this order.
+
+**Q64. Interpret the Glucose odds ratio of 2.78.**
+For every 1-standard-deviation increase in glucose, the odds of diabetes multiply by about 2.78, keeping the other features fixed.
+
+**Q65. Does a high SHAP value mean glucose *causes* diabetes?**
+No. SHAP explains what the *model* uses to make its prediction; it shows association in this data, not causation. Here the link is even partly circular, because diabetes is diagnosed with glucose tests.
+
+**Q66. What is a Shapley value, in simple words?**
+Add the features one by one in every possible order and record how much each one changes the prediction when it joins. A feature's Shapley value is its average contribution. The values for one patient add up exactly to (prediction − average prediction).
+
+**Q67. Why KernelExplainer and not TreeExplainer?**
+TreeExplainer only works for tree-based models; our best classifier is an SVM. KernelExplainer works for any model by asking it for predictions with features "switched off" (replaced by background values).
+
+**Q68. Why are the SVM's SHAP values in probability units but LR's in log-odds?**
+We explained the SVM's `predict_proba` output directly. LinearExplainer explains LR's linear part, which is the log-odds $z$; the sigmoid turns it into a probability afterwards.
+
+**Q69. Why was the missed diabetic missed?**
+Her measurements look healthy: glucose 78, family-history score 0.248, age 26. Almost every feature pushed her risk down (probability 0.036). No model using only these eight features could reasonably flag her. Her diabetes may show in information we do not have.
+
+**Q70. What surprised you in the explanations?**
+(1) Blood pressure and insulin barely matter (odds ratios 1.018 and 1.016). (2) For two patients with very high insulin, the SVM *lowers* the risk, which makes no clinical sense. It comes from the curved RBF boundary in a region with very few training patients. LR shows no such reversal, so here explainability caught a weakness that accuracy alone would hide.
+
+**Q71. Why does insulin matter so little if it was correlated (0.30) with Outcome in the EDA?**
+48.7% of insulin values were missing and filled with the same median, which weakens its signal, and it is correlated with glucose (0.58), which already carries most of that information.
+
+**Q72. Do permutation importance and SHAP measure the same thing?**
+Not exactly. Permutation importance measures how much the *score* drops without a feature; SHAP measures how much a feature moves each *prediction*. Agreement between them (same top five here) increases our confidence.
+
+**Q73. What drives diabetes progression in the regression model?**
+s5 (triglycerides, +29.6 per SD), bmi (+25.8) and bp (+16.6). s1 and s2 must be read together because they are 0.90 correlated.

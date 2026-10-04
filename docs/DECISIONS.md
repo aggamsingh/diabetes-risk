@@ -178,3 +178,24 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### D-28: Test recall in the comparison table uses `predict()`  (Section F)
 - Why: the CV recall in E.2 (from `cross_validate`) uses each model's `predict()`, so the test column uses the same rule to be comparable. The screening result with threshold 0.30 (E.5) is reported separately.
+
+### D-29: SHAP `KernelExplainer` for the SVM, `LinearExplainer` for Logistic Regression  (Section G)
+- Options considered: KernelExplainer on the tuned SVM; TreeExplainer on Random Forest instead; SHAP for LR only.
+- Chosen (agreed with the team): KernelExplainer on the SVM we actually selected, plus LinearExplainer on LR for comparison.
+- Details: 50 training patients as background (`shap.sample`, seed 42); explained on **imputed but unscaled** data so the plots show clinical units; output = probability. With 8 features KernelExplainer enumerates all feature coalitions, so the values are exact for this background and identical every run (about 30–40 s).
+- Check: base value + sum of SHAP values = predicted probability (additivity). We checked this in a separate test script during development; it is not a cell in the notebook, but the waterfall plots show it (e.g. 0.287 → 0.932).
+- Likely viva question → *"Why not TreeExplainer?"* Our best model is an SVM, not a tree; TreeExplainer only works for tree models.
+
+### D-30: Permutation importance on the test set, scored by ROC-AUC, 20 repeats  (Section G)
+- Why: computing it on the test set measures what the model relies on for *unseen* patients; ROC-AUC matches our tuning metric; 20 repeats average out the randomness of shuffling.
+- Likely viva question → *"Why are some importances slightly negative?"* Shuffling a feature the model barely uses can improve the score by chance; values near 0 mean "not used".
+
+### D-31: Choice of the three waterfall patients  (Section G)
+- Rule (using the screening threshold 0.30): caught diabetic = the true positive with the highest probability; cleared healthy = the true negative with the lowest; missed diabetic = the false negative with the lowest probability (the clearest miss).
+- Why: a fixed rule, not hand-picked; it shows the clearest example of each case.
+
+### D-32: Seed NumPy before SHAP beeswarm plots  (Section G)
+- Why: `shap.plots.beeswarm` shuffles the dot order using NumPy's global random generator, so the figure changed on every run. `np.random.seed(RANDOM_STATE)` before each call makes all 25 figures identical across runs (checked).
+
+### D-33: Regression explained with Lasso coefficients, not SHAP  (Section G)
+- Why: the final regressor is linear, so its coefficients on standardised features *are* its explanation (for a linear model, SHAP values are just coefficient × (value − mean)). CLAUDE.md asks for SHAP **or** coefficients here.
