@@ -13,7 +13,7 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### D-02: Rename Pima columns and encode the target as 0/1  (Section A)
 - Options considered: keep OpenML's short names (`preg`, `plas`, ...); rename them to the standard names.
-- Chosen: rename them to `Pregnancies`, `Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, `BMI`, `DiabetesPedigreeFunction`, `Age`, and turn `class` into `Outcome` (1 = `tested_positive`, 0 = `tested_negative`).
+- Chosen: assign the clear names (`pima.columns = [...]`): `Pregnancies`, `Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, `BMI`, `DiabetesPedigreeFunction`, `Age`, and turn `class` into `Outcome` (1 = `tested_positive`, 0 = `tested_negative`).
 - Why: clear names make plots and explanations readable; models need a numeric target.
 - Trade-off: none of importance; the mapping is shown in the notebook.
 - Likely viva question → *"How did you encode the target?"* `Outcome = 1` if the label is `tested_positive`, else 0.
@@ -66,3 +66,24 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 - Why: the numbering follows the notebook order, and no figure can be forgotten.
 - Trade-off: none of importance.
 - Likely viva question → n/a.
+
+### D-10: Convert Pima's impossible zeros to NaN during EDA (Section B), impute later (Section C)  (Section B)
+- Options considered: keep the zeros; drop rows with zeros; set them to NaN and impute.
+- Chosen: replace the 0s in Glucose, BloodPressure, SkinThickness, Insulin and BMI with NaN in Section B; fill them with the **training-set median inside a Pipeline** in Section C.
+- Why: the zeros are physiologically impossible (Insulin: 374 zeros = 48.7%; SkinThickness: 227 = 29.6%). Kept as 0 they distort plots, means and correlations. Dropping rows would lose about half the data. Replacing 0 with NaN learns nothing from the data, so doing it before the split causes no leakage; the median itself is learned only from the training set.
+- Trade-off: almost half the Insulin values will be imputed, so Insulin-based conclusions are less reliable.
+- Likely viva question → *"Why not use the zeros as they are?"* A zero insulin or BMI is impossible; it means "not recorded". Treating it as a real value would teach the model a false pattern.
+
+### D-11: Median (not mean) for imputation  (Section B → used in C)
+- Options considered: mean; median; model-based imputation.
+- Chosen: median.
+- Why: Insulin and SkinThickness are right-skewed (Insulin mean 79.80 vs median 30.50 before removing zeros), and the median is not pulled up by extreme values.
+- Trade-off: imputing many identical values shrinks the column's spread.
+- Likely viva question → *"Why median?"* It is robust to skew and outliers.
+
+### D-12: Keep outliers  (Section B)
+- Options considered: remove IQR outliers; cap them; keep them.
+- Chosen: keep all rows.
+- Why: the flagged values are plausible real patients (e.g. high insulin or pedigree scores), not errors, and the datasets are small (at most 29 flagged in any one column).
+- Trade-off: extreme values can pull linear models; tree models are hardly affected.
+- Likely viva question → *"You found outliers. Why didn't you remove them?"* An outlier is not the same as an error; removing real high-risk patients would bias the model.

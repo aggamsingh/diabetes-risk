@@ -44,3 +44,46 @@ Diabetes is diagnosed from glucose tests, so the label is partly defined by gluc
 
 **Q13. What does an R² of 0 mean?**
 The model is no better than always predicting the mean progression (152.13 in our data). Our goal is to beat that clearly, aiming for R² ≈ 0.40.
+
+---
+
+## Rubric 2: Exploratory Data Analysis (Section B)
+
+**Q14. How many values were missing in Pima, and where?**
+Hidden as zeros: Insulin 374 (48.7%), SkinThickness 227 (29.6%), BloodPressure 35, BMI 11, Glucose 5.
+
+**Q15. Why not use the zeros as they are?**
+A zero glucose, blood pressure or BMI is impossible for a living person, so it means "not recorded". Treating it as a real value would drag averages down and teach the model a false pattern (for example, that "insulin = 0" means something).
+
+**Q16. Why not just drop the rows with missing values?**
+Insulin alone is missing for almost half the patients. Dropping those rows would throw away about half of an already small dataset.
+
+**Q17. You replaced zeros with NaN before the train/test split. Isn't that leakage?**
+No. Replacing 0 with NaN uses no statistics from the data; it applies the same fixed rule to every row. The **median** used to fill the gaps is learned inside the Pipeline from the training set only (Section C).
+
+**Q18. Why median imputation and not mean?**
+Insulin and SkinThickness are right-skewed; the median is not pulled up by the long tail of large values.
+
+**Q19. Why is accuracy misleading for Pima?**
+The classes are 65.1% non-diabetic and 34.9% diabetic. A model that always says "not diabetic" scores 65.1% accuracy while catching nobody.
+
+**Q20. Which feature separates diabetics best, and how do you know?**
+Glucose: highest correlation with Outcome (0.49), median 140 for diabetics vs 107 for non-diabetics, and its class boxes barely overlap.
+
+**Q21. Why did you plot densities instead of counts in the Pima histograms?**
+There are fewer diabetics (268 vs 500), so their count bars are always lower. Scaling each class to the same area (`stat="density"`, `common_norm=False`) lets us compare the **shapes** of the two distributions.
+
+**Q22. What does the IQR rule do, and why did you keep the outliers?**
+It flags values below $Q_1 - 1.5\,IQR$ or above $Q_3 + 1.5\,IQR$. The flagged values look like real extreme patients, not errors, and the data is small, so removing them would lose real information.
+
+**Q23. What does a correlation of 0.49 mean? Does it mean glucose causes diabetes?**
+It is a moderate positive linear relationship: higher glucose tends to go with diabetes. Correlation does not prove causation (and here diabetes is partly *defined* by glucose).
+
+**Q24. What is the problem with s1 and s2 being correlated at 0.90?**
+They carry almost the same information. In plain Linear Regression this makes their coefficients unstable (they can trade off against each other). Ridge shrinks them; Lasso may drop one.
+
+**Q25. Why is HDL (s3) negatively correlated with progression (−0.39)?**
+HDL is "good" cholesterol; higher HDL is generally protective, so it goes with less progression. This matches medical knowledge.
+
+**Q26. Why do you need feature scaling?**
+The features have very different ranges (Insulin up to 846, DiabetesPedigreeFunction below 2.5). Distance-based (KNN, SVM) and coefficient-based (linear, logistic) models would otherwise be dominated by the large-valued features.
