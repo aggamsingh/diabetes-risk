@@ -303,7 +303,7 @@ Cover at least the following:
 `diabetes_risk_kaggle.ipynb` repeats the Pima notebook on the Kaggle **Diabetes Prediction Dataset** (~100k patients), which gives more stable scores. Rules:
 
 - **Mirror the Pima notebook** (`diabetes_risk.ipynb`) exactly: same Sections A–H, writing style, cell layout, helper functions and checklist. Only the dataset (and what follows from it) changes. Do not modify the Pima notebook.
-- **Data:** `data/diabetes_prediction_dataset.csv`, downloaded manually from Kaggle (no kagglehub). Exact duplicate rows are dropped; `"No Info"` in `smoking_history` is kept as a category.
+- **Data:** `data/kaggle_dataset/diabetes_prediction_dataset.csv`, downloaded manually from Kaggle (no kagglehub). Exact duplicate rows are dropped; `"No Info"` in `smoking_history` is kept as a category.
 - **Classification** (`diabetes`): Logistic Regression, Decision Tree, Random Forest, each on **two feature sets**: *all features* and *no blood test* (without `HbA1c_level` and `blood_glucose_level`), because the label is defined by those tests.
 - **Regression:** **Ridge** on `HbA1c_level`, compared with a mean baseline. `diabetes` must never be a regression feature (leakage).
 - **Preprocessing:** text columns (`gender`, `smoking_history`) are one-hot encoded inside the pipeline (`ColumnTransformer`).

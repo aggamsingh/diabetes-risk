@@ -199,3 +199,58 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### D-33: Regression explained with Lasso coefficients, not SHAP  (Section G)
 - Why: the final regressor is linear, so its coefficients on standardised features *are* its explanation (for a linear model, SHAP values are just coefficient × (value − mean)). CLAUDE.md asks for SHAP **or** coefficients here.
+
+---
+
+# Kaggle notebook (`diabetes_risk_kaggle.ipynb`)
+
+### K-01: Add a second notebook on the Kaggle Diabetes Prediction Dataset  (all sections)
+- Options considered: replace the Pima notebook; keep both.
+- Chosen: keep Pima unchanged and build a separate notebook that mirrors it section by section.
+- Why: ~100,000 patients give far more stable scores (CV std ≤ 0.01 vs 0.02–0.04 for Pima), and the project is assessed over three reviews.
+- Likely viva question → *"Why two datasets?"* Pima is small but well documented; Kaggle is large and stable but of unknown origin. Together they show the same method on both.
+
+### K-02: Drop exact duplicates; keep "No Info" as a category  (Section B)
+- Found: 3,854 duplicate rows; 35,816 "No Info" smoking entries.
+- Why: duplicates give some patients double weight and can leak between train and test. "No Info" is informative (it is mostly children), so it stays as its own category.
+
+### K-03: BMI = 27.32 is a hidden missing value  (Section B)
+- Found: 27.32 appears 25,495 times (21,666 after removing duplicates = 22.5%); the next most common value appears 103 times.
+- Chosen: set it to NaN. Classification: the pipeline imputes the training median. Regression: those rows are dropped (BMI is the target).
+- Likely viva question → *"How did you know 27.32 was fake?"* Mean and median were both exactly 27.32, and one value occurring thousands of times while all others occur about 100 times cannot be real measurements.
+
+### K-04: Two feature sets for classification  (Sections A, E)
+- Found: every patient with HbA1c above 6.6 or glucose above 200 is diabetic (B.6), so the label is largely defined by these tests.
+- Chosen: "all features" and "no blood test" (age, gender, BMI, hypertension, heart disease, smoking).
+- Why: the all-features model is partly circular; the no-blood-test model answers the real screening question, *who should get a blood test?*
+
+### K-05: Regression target = BMI, not HbA1c  (Section D)
+- Options considered: HbA1c (original plan); HbA1c with `diabetes` as an input; BMI.
+- Found: Ridge for HbA1c reaches only CV R² 0.042; HbA1c values 6.8–9.0 occur only in diabetics, so HbA1c follows the diagnosis, not the other features. Using `diabetes` as an input would be leakage.
+- Chosen (agreed with the team): show the HbA1c result briefly in D.1, then predict BMI with Ridge (test R² 0.171).
+- Likely viva question → *"Why is R² only 0.17?"* Only age is clearly linked to BMI in this data (correlation 0.388); the other features say little about weight.
+
+### K-06: One-hot encoding inside a ColumnTransformer  (Section C)
+- Why: `gender` and `smoking_history` are text; one-hot turns each category into a 0/1 column. Doing it inside the pipeline means the categories are learned from the training data only; `handle_unknown="ignore"` protects against unseen categories.
+
+### K-07: Models: LR, DT, RF (+ Ridge); tune LR and RF  (Sections D, E)
+- Why: agreed scope for Review 1 (more models later). LR and RF were the best two by CV ROC-AUC in both feature sets.
+- Grids: LR `C ∈ {0.01, 0.1, 1, 10}`; RF `max_depth ∈ {None, 10}`, `min_samples_leaf ∈ {1, 10}`; Ridge `alpha` from 0.01 to 10,000 (extended after the first best value, 1000, sat at the edge of the grid).
+- Result: RF improved a lot (all features 0.9669 → 0.9758; no blood test 0.7558 → 0.8307); LR and Ridge did not change.
+
+### K-08: Final classifiers  (Section E)
+- All features: tuned **Random Forest** (CV ROC-AUC 0.9758 vs LR 0.9623).
+- No blood test: tuned **Logistic Regression** (0.8313 vs RF 0.8307, practically a tie, so the simpler model).
+
+### K-09: Threshold chosen in code by a fixed rule  (Section E)
+- Rule: the highest threshold (from 0.9 down to 0.1) whose training-CV recall ≥ 0.75.
+- Result: all features t = 0.7 (test recall 0.784, precision 0.729); no blood test t = 0.5 (test recall 0.787, precision 0.211).
+- Why: no hand-picking and no test-set peeking; the grid starts above 0.5 so a *higher* threshold can be chosen when recall allows it.
+
+### K-10: SHAP: path-dependent TreeExplainer for RF, LinearExplainer for LR, on a 500-patient sample  (Section G)
+- Found: TreeExplainer with a background sample failed its own additivity check (0.979 vs 0.955); reading the trees directly (no background) is exact.
+- LR SHAP values are computed on scaled data but shown in real units (inverse-transformed) so the plots are readable; they are in log-odds.
+- Permutation importance uses 5 repeats (the large test set already gives stable results).
+
+### K-11: Figures in `figures/kaggle/`  (all sections)
+- Why: keeps them apart from the Pima figures, which use the same numbering.

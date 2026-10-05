@@ -248,3 +248,49 @@ Not exactly. Permutation importance measures how much the *score* drops without 
 
 **Q73. What drives diabetes progression in the regression model?**
 s5 (triglycerides, +29.6 per SD), bmi (+25.8) and bp (+16.6). s1 and s2 must be read together because they are 0.90 correlated.
+
+---
+
+## Kaggle notebook (`diabetes_risk_kaggle.ipynb`)
+
+**K1. Why did you add a second dataset?**
+Pima has only 768 patients, so scores varied a lot between folds (std 0.02–0.04). The Kaggle data has about 100,000 patients, so scores are stable (std ≤ 0.01) and test scores match CV scores.
+
+**K2. What data-quality problems did you find?**
+3,854 duplicate rows (removed), 35,816 "No Info" smoking entries (kept as a category), and BMI = 27.32 used as a filled-in value for 22.5% of patients (treated as missing).
+
+**K3. Why is the "all features" model almost perfect (ROC-AUC 0.974)?**
+Because the label is largely defined by the inputs: every patient with HbA1c above 6.6 or glucose above 200 is diabetic. The model is mostly re-learning the diagnostic cut-offs.
+
+**K4. Then what is the useful model?**
+The "no blood test" model (age, BMI, gender, hypertension, heart disease, smoking). It answers *who should get a blood test?* It catches 78.7% of diabetics (test recall) with ROC-AUC 0.825.
+
+**K5. Its precision is only 0.211. Is that acceptable?**
+For a first screening step, yes: about 1 in 5 flagged patients is diabetic, and each flag only leads to a cheap blood test. Missing a diabetic is worse than an extra test.
+
+**K6. Why didn't you predict HbA1c, as planned?**
+Ridge explained only 4.2% of its variation (CV R² 0.042). HbA1c values above 6.6 occur only in diabetics, so HbA1c follows the diagnosis, not the routine features. Adding `diabetes` as an input would be leakage.
+
+**K7. Your BMI model has R² = 0.171. Is that a failure?**
+It clearly beats the baseline (RMSE 7.04 vs 7.73) and does not overfit (train 0.181, CV 0.180, test 0.171). But it shows that age, blood pressure and lab values say little about a person's weight; only age is clearly related (correlation 0.388).
+
+**K8. Why does "No Info" smoking lower the predicted risk (odds ratio 0.67)?**
+"No Info" is common among children, who rarely have diabetes, so it acts as a stand-in for being young. It is a pattern in how the data was recorded, not a cause.
+
+**K9. Why did tuning help the Random Forest so much here but not in Pima?**
+`min_samples_leaf = 10` stops trees from memorising single patients (untuned train ROC-AUC 1.000). With about 77,000 training patients, the CV scores are precise enough to show the real gain (no blood test: 0.756 → 0.831).
+
+**K10. Why Random Forest for all features but Logistic Regression without blood tests?**
+HbA1c and glucose act through cut-offs, which trees model naturally. Without them, risk rises smoothly with age and BMI, which a linear model captures just as well (0.8313 vs 0.8307), so we pick the simpler, interpretable one.
+
+**K11. How was the threshold chosen?**
+In code, by a fixed rule on training-CV probabilities: the highest threshold with recall ≥ 0.75. That gave 0.7 for all features and 0.5 for no blood test.
+
+**K12. Why does the missed diabetic have HbA1c 8.8 but a low predicted risk?**
+The no-blood-test model cannot see HbA1c. She is 45, with a normal BMI of 23.3 and no other risk factors, so on risk factors alone she looks healthy (probability 0.237). This is why screening must be followed by a blood test.
+
+**K13. How do you handle the text columns?**
+One-hot encoding inside the pipeline (`ColumnTransformer`), so the categories are learned from the training data and new categories are ignored.
+
+**K14. What are the main limitations of the Kaggle data?**
+Its source is undocumented and some patterns suggest it may be partly synthetic; the label is circular with the lab values; 22.5% of BMIs were placeholders; and children are mixed with adults.

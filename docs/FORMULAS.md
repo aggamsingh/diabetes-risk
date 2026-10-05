@@ -185,3 +185,15 @@ $$\phi_j = \sum_{S \subseteq F \setminus \{j\}} \frac{|S|!\,(|F|-|S|-1)!}{|F|!}\
 $$f(x) = E[f(X)] + \sum_j \phi_j(x)$$
 - $E[f(X)]$ = base value (the average prediction over the background); the SHAP values add up exactly to this patient's prediction.
 - **Used in:** Section G.5 waterfall plots (e.g. 0.287 + contributions = 0.932 for the caught diabetic).
+
+---
+
+## 11. Kaggle notebook additions
+
+### One-hot encoding
+A text column with categories $c_1, \dots, c_K$ becomes $K$ columns: $x_{c_k} = 1$ if the patient is in category $c_k$, else 0.
+- **Intuition:** models need numbers, but "never = 1, former = 2, current = 3" would invent an order. One-hot gives each category its own yes/no column.
+- **Coefficient meaning:** in a linear model, a one-hot coefficient is the effect of being in that category, compared with the average of the others.
+- **Used in:** Kaggle notebook, Section C.3.
+
+All other formulas (Ridge, logistic regression, Gini, random forest, metrics, CV, odds ratios, permutation importance, SHAP) are the same as above.

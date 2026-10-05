@@ -19,6 +19,20 @@ Everything is in one notebook: [`diabetes_risk.ipynb`](diabetes_risk.ipynb).
 **Main drivers of diabetes risk:** Glucose (odds ratio 2.78 per SD), then BMI, pregnancies, family history and age. Four explanation methods agree on this order.
 **Main drivers of progression:** triglycerides (s5), BMI and blood pressure.
 
+
+## Second notebook: Kaggle dataset
+
+[`diabetes_risk_kaggle.ipynb`](diabetes_risk_kaggle.ipynb) repeats the same steps on the Kaggle **Diabetes Prediction Dataset** (~100,000 patients) for more stable results. Put `diabetes_prediction_dataset.csv` in `data/kaggle_dataset/` before running; a full run takes about 2 minutes. Figures are saved in `figures/kaggle/`.
+
+| Task | Final model | Test results |
+|---|---|---|
+| Classification, all features | Random Forest (tuned), threshold 0.7 | recall 0.784, precision 0.729, ROC-AUC 0.974 |
+| Classification, no blood test | Logistic Regression, threshold 0.5 | recall 0.787, precision 0.211, ROC-AUC 0.825 |
+| Ridge regression on BMI | Ridge (alpha = 100) | R² 0.171, RMSE 7.04 (mean baseline 7.73) |
+
+- The diabetes label is largely defined by HbA1c and glucose, so the "all features" model is partly circular; the **no blood test** model is the realistic screening result. Its main drivers are **age and BMI**.
+- HbA1c was first planned as the regression target but cannot be predicted from the other features in this dataset (R² 0.042), so Ridge predicts BMI instead.
+
 ## Rubric map
 
 | # | Rubric item | Notebook section |
@@ -47,13 +61,14 @@ All random steps use `RANDOM_STATE = 42`, so the results are the same on every r
 ## Repository layout
 
 ```
-diabetes_risk.ipynb       the notebook (main deliverable)
+diabetes_risk.ipynb       Pima notebook (main deliverable)
+diabetes_risk_kaggle.ipynb   Kaggle notebook (same steps, larger dataset)
 requirements.txt          pinned library versions
-data/                     pima.csv, progression.csv
+data/                     pima.csv, progression.csv, kaggle_dataset/
 figures/                  all figures (fig01 ... fig23) for the report and slides
 docs/DECISIONS.md         every design decision, with reasons
 docs/FORMULAS.md          every formula used, with symbols and intuition
-docs/VIVA_PREP.md         73 likely viva questions with answers
+docs/VIVA_PREP.md         likely viva questions with answers (both notebooks)
 docs/PRESENTATION_OUTLINE.md   slide plan
 ```
 
