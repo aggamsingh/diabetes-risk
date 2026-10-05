@@ -305,7 +305,7 @@ Cover at least the following:
 - **Mirror the Pima notebook** (`diabetes_risk.ipynb`) exactly: same Sections A–H, writing style, cell layout, helper functions and checklist. Only the dataset (and what follows from it) changes. Do not modify the Pima notebook.
 - **Data:** `data/kaggle_dataset/diabetes_prediction_dataset.csv`, downloaded manually from Kaggle (no kagglehub). Exact duplicate rows are dropped; `"No Info"` in `smoking_history` is kept as a category.
 - **Classification** (`diabetes`): Logistic Regression, Decision Tree, Random Forest, each on **two feature sets**: *all features* and *no blood test* (without `HbA1c_level` and `blood_glucose_level`), because the label is defined by those tests.
-- **Regression:** **Ridge** on `HbA1c_level`, compared with a mean baseline. `diabetes` must never be a regression feature (leakage).
+- **Regression:** **Ridge** on `bmi`, compared with a mean baseline. HbA1c was the original target but cannot be predicted in this dataset (CV R² ≈ 0.04); the notebook shows this briefly in Section D.1. `diabetes` must never be a regression feature. BMI = 27.32 is a filled-in value: treat it as missing (imputed for classification, rows dropped for the BMI regression).
 - **Preprocessing:** text columns (`gender`, `smoking_history`) are one-hot encoded inside the pipeline (`ColumnTransformer`).
 - **Screening threshold:** chosen in code by a fixed rule on training-CV probabilities (highest threshold with recall ≥ 0.75).
 - **Figures:** `figures/kaggle/figNN_*.png`.
