@@ -311,4 +311,14 @@ Cover at least the following:
 - **Figures:** `figures/kaggle/figNN_*.png`.
 - More models may be added in later reviews.
 
+## 11. PBL 2 and PBL 3 Notebooks
+
+Assigned topics (team sheet): PBL 2 = **Alternate EM** (Unit 3, existing dataset), PBL 3 = **HMM** (Unit 4, new sequential dataset). One combined presentation.
+
+- `pbl2_alternate_em.ipynb`: GMM fitted by EM (`sklearn.mixture.GaussianMixture`) on Pima, K-means as hard EM, BIC for K, hand-check of E/M steps. Figures in `figures/pbl2/`.
+- `pbl3_hmm.ipynb`: Gaussian HMM (`hmmlearn`) on AIM-94 / UCI Diabetes glucose sequences in `data/uci_diabetes/`, split by patient, hand-written forward and Viterbi checked against the library. Figures in `figures/pbl3/`.
+- Same style rules as above (what/why/formula cells, Observation cells, numbers only from outputs). Library code is allowed and expected; `hmmlearn` is the one extra library.
+- Docs: PBL 2 / PBL 3 sections at the end of `DECISIONS.md`, `FORMULAS.md`, `VIVA_PREP.md`, plus `docs/PBL2_3_PRESENTATION_OUTLINE.md`.
+- Commits for this work are authored by Jai (the user's own git identity), not Aggam.
+
 **Start by reading this file, then confirm your understanding and propose the plan for Section A.**

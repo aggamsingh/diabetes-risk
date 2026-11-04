@@ -33,6 +33,16 @@ Everything is in one notebook: [`diabetes_risk.ipynb`](diabetes_risk.ipynb).
 - The diabetes label is largely defined by HbA1c and glucose, so the "all features" model is partly circular; the **no blood test** model is the realistic screening result. Its main drivers are **age and BMI**.
 - HbA1c was first planned as the regression target but cannot be predicted from the other features in this dataset (R² 0.042), so Ridge predicts BMI instead.
 
+## PBL 2 and PBL 3
+
+| PBL | Topic | Notebook | Data | Main result |
+|---|---|---|---|---|
+| 2 (Unit 3) | Alternate EM (Gaussian Mixture Model) | [`pbl2_alternate_em.ipynb`](pbl2_alternate_em.ipynb) | Pima (existing) | 3 label-free risk profiles with diabetes rates of 10.8%, 38.0% and 56.9% |
+| 3 (Unit 4) | Hidden Markov Model | [`pbl3_hmm.ipynb`](pbl3_hmm.ipynb) | AIM-94 / UCI Diabetes glucose sequences (new, in `data/uci_diabetes/`) | 3 glucose regimes (low / target / high); beats the no-time model on new patients (log-lik -5.685 vs -5.731) |
+
+Figures are in `figures/pbl2/` and `figures/pbl3/`; slide plan in `docs/PBL2_3_PRESENTATION_OUTLINE.md`.
+The AIM-94 data was provided by Michael Kahn, MD, PhD, Washington University, St. Louis, MO (UCI Machine Learning Repository).
+
 ## Rubric map
 
 | # | Rubric item | Notebook section |
