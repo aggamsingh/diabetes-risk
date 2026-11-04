@@ -500,3 +500,107 @@ Each fold and the test set contain many more patients, so random luck about who 
 **T47. Why is this a decision-support prototype and not a diagnostic tool?**
 
 The data source is undocumented, the label is circular with the lab values, precision without blood tests is low (about 1 in 5), and the models show association, not causation. A positive screen must lead to a blood test.
+
+---
+
+## PBL 2: Alternate EM (`pbl2_alternate_em.ipynb`)
+
+**E1. What is EM, in one sentence?**
+An algorithm for fitting models with hidden variables. It alternates between guessing the hidden variables from the current parameters (E-step) and refitting the parameters from those guesses (M-step).
+
+**E2. Why is it called "alternate" / alternating?**
+Neither step can be solved alone: the groups depend on the Gaussians and the Gaussians depend on the groups. EM fixes one, solves the other, and alternates. Both steps increase the same objective, like coordinate ascent.
+
+**E3. What is a responsibility?**
+$\gamma_{ik}$, the probability that patient $i$ came from group $k$, given the current parameters. Each patient's responsibilities sum to 1.
+
+**E4. Why does the log-likelihood never decrease?**
+The E-step builds a lower bound that touches the log-likelihood at the current parameters. The M-step maximises that bound, so the new log-likelihood is at least as high. Our step-by-step run confirmed this ("Never decreased: True").
+
+**E5. Does EM find the best solution?**
+No, only a local maximum. With a single start, 9 of 10 seeds stopped at -6.670 instead of -6.647. That is why we use `n_init=10`.
+
+**E6. How did you choose K = 3?**
+With BIC = -2 log L + p log N, which rewards fit but penalises parameters. The lowest value was diag K = 3 (10422.4), with K = 4 almost tied (10423.5), so we took the simpler model.
+
+**E7. full vs diag covariance?**
+`full`: each group is a tilted ellipse, with many parameters. `diag`: the ellipses are axis-aligned, with fewer parameters. Our features are only weakly correlated (largest 0.34), so `diag` fits nearly as well with far fewer parameters and wins on BIC.
+
+**E8. How is K-means related to EM?**
+K-means is "hard" EM: each point gets one group (responsibility 0 or 1), and all groups share the same round shape. It alternates assign and update steps.
+
+**E9. K-means had higher silhouette and ARI. Why use the GMM?**
+The silhouette uses plain distances, which favour round clusters. The GMM gives probabilities: it showed that 30.6% of patients sit between profiles, which K-means hides. For explanation, "55% profile A, 45% profile B" is more honest.
+
+**E10. Why drop Insulin, SkinThickness and Pregnancies?**
+Insulin and SkinThickness are more than 25% missing, so filling them creates a spike of one value. Pregnancies is a whole-number count with many repeated values. A Gaussian can collapse onto a repeated value and fake a huge likelihood.
+
+**E11. Why log-transform and scale?**
+Gaussians are symmetric, so a long right tail fits badly (log(1+x) fixes that). The distances inside the Gaussians need features on one scale, or Glucose (about 120) would swamp DiabetesPedigreeFunction (about 0.5).
+
+**E12. Did you use the label?**
+Only after fitting, to evaluate. The diabetes rate per group (10.8%, 38.0%, 56.9%) is a check, not an input.
+
+**E13. Why is the ARI with Outcome low (0.101)?**
+Diabetes is a gradual risk, not a separate cluster, and the groups are risk profiles, not diagnoses. A five-fold difference in diabetes rate between groups is the useful result.
+
+**E14. How did you check the library is correct?**
+We recomputed the E-step from the formula (it matched `predict_proba` to 1e-15) and one M-step (the weights and means changed by less than 0.01, so the fit is a fixed point).
+
+**E15. What does PCA do here?**
+Only plotting: it projects the 5 features onto 2 directions (56.1% of the variance). The clustering uses all 5 features.
+
+---
+
+## PBL 3: Hidden Markov Model (`pbl3_hmm.ipynb`)
+
+**H1. What is an HMM?**
+A Markov chain of hidden states, where each state emits an observation. We see only the observations (glucose readings), not the states (glucose regimes).
+
+**H2. What are π, A and B?**
+π = start probabilities, A = transition matrix ($a_{ij}$ = P(next = j | now = i)), B = emission distributions (here one Gaussian per state, with mean and variance).
+
+**H3. What is the Markov property? Is it realistic here?**
+The next state depends only on the current one. It is a simplification: glucose depends on insulin and meals over many hours. But the hidden state can absorb some of that memory, and it beat the no-time model on new patients.
+
+**H4. The three HMM problems?**
+Evaluation (forward algorithm), decoding (Viterbi) and learning (Baum-Welch).
+
+**H5. Forward vs Viterbi?**
+The forward algorithm sums over all paths and gives P(x). Viterbi takes the max and gives the single best path. That is why the Viterbi log-probability (-613.0) is lower than the forward log-likelihood (-600.2).
+
+**H6. What is forward-backward used for?**
+It gives P(state at t | the whole sequence), so we know how sure the model is at each reading. Baum-Welch uses it in its E-step.
+
+**H7. How is Baum-Welch related to PBL 2?**
+It is the same EM. The E-step uses forward-backward to get state probabilities, and the M-step re-estimates π, A, μ and σ² as weighted averages. The only new parameter compared with a GMM is A.
+
+**H8. Why compute in log space?**
+Multiplying hundreds of probabilities below 1 underflows to 0. Log space turns products into sums, and logsumexp handles the sums safely.
+
+**H9. Why 3 states when BIC prefers 5?**
+The extra states had overlapping means (180, 191, 211) that differed only in spread, which is hard to explain. The 3 states (75, 126, 206 mg/dL) match the clinical low / target / high bands. We traded a little fit for interpretability, and we say so in the notebook.
+
+**H10. Why split by patient?**
+If one patient's readings were in both train and test, the model would be tested on a pattern it had already learned (leakage). New patients are the real use case.
+
+**H11. Why the `lengths` argument?**
+All sequences are stacked into one column. `lengths` tells hmmlearn where each patient ends, so the jump from patient A's last reading to patient B's first is not learned as a transition.
+
+**H12. How do you know the time order matters?**
+The lag-1 autocorrelation is 0.186 (0.0 when shuffled), and the HMM's test log-likelihood (-5.685) beats the same mixture without transitions (-5.731).
+
+**H13. What does a_ii mean clinically?**
+The chance of staying in a regime. Expected duration = 1/(1 - a_ii): Low lasts about 1.75 readings (quick correction), Target about 33.7 (stable control), High about 4.7.
+
+**H14. What is the most interesting transition?**
+Low → High is 0.56, so after a low the next reading is usually high: the rebound from over-correcting plus counter-regulatory hormones.
+
+**H15. Why does the forecast barely beat the mean (60.1 vs 62.6)?**
+Readings are about 6 hours apart and only weakly related, so the exact next value is hard to predict. The HMM still wins because it uses the slowly changing regime; copying the last reading (74.0) is worst because it copies noise.
+
+**H16. Limitations?**
+Irregular time gaps (one step = one reading), approximate times on paper records, glucose only (no insulin or meals as inputs), old data from 70 Type 1 patients, and associations, not diagnoses.
+
+**H17. How does this connect to the main project?**
+PBL 1 predicted risk from one snapshot. PBL 2 found risk profiles without labels. PBL 3 follows a patient over time and turns weeks of readings into an explainable summary (time in each regime).

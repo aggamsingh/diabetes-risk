@@ -254,3 +254,76 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### K-11: Figures in `figures/kaggle/`  (all sections)
 - Why: keeps them apart from the Pima figures, which use the same numbering.
+
+---
+
+## PBL 2: Alternate EM (`pbl2_alternate_em.ipynb`)
+
+### P2-01: Dataset = Pima (the PBL 1 classification data)  (Section B)
+- Options considered: Pima (768 rows), Kaggle (about 100k rows).
+- Chosen: Pima.
+- Why: the rubric asks for an existing dataset. Pima is the main PBL 1 dataset, small enough to plot every patient, and it has the `Outcome` label to check the clusters against afterwards.
+- Likely viva question → "Why not Kaggle?": its label is defined by HbA1c/glucose thresholds, and many of its columns are binary or categorical, which do not suit Gaussian groups.
+
+### P2-02: Feature selection for a Gaussian model  (Section B.2)
+- Dropped: `Outcome` (unsupervised; kept aside for evaluation only), Insulin (48.7% missing) and SkinThickness (29.6% missing) by a 25% rule, and Pregnancies (a discrete count).
+- Why: median-filling half a column creates a spike of identical values, and a Gaussian can collapse onto any heavily repeated value (a fake, near-infinite likelihood). Pregnancies is also partly covered by Age.
+- Kept: Glucose, BloodPressure, BMI, DiabetesPedigreeFunction, Age.
+- Likely viva question → "Isn't dropping Insulin losing information?": yes, but filled-in Insulin is mostly fake information, and for EM it hurts more than it helps.
+
+### P2-03: log(1 + x) for skew > 1, then StandardScaler  (Section B.3)
+- Logged: DiabetesPedigreeFunction (skew 1.92 → 1.12) and Age (1.13 → 0.61).
+- Why: Gaussians are symmetric, and the distances inside them need all features on the same scale.
+
+### P2-04: K and covariance type chosen by BIC  (Section C.1)
+- Options considered: K = 1..8, `full` or `diag` covariance.
+- Chosen: `diag`, K = 3 (BIC 10422.4). K = 4 is almost tied (10423.5), and BIC takes the simpler model.
+- Why BIC and not likelihood: the likelihood always rises with K; BIC penalises the number of parameters.
+
+### P2-05: n_init = 10 random starts  (Sections C.3, D.5)
+- Evidence: with a single start, 9 of 10 seeds stopped at a worse local maximum (-6.670 vs -6.647 average log-likelihood).
+
+### P2-06: EM step by step with max_iter=1 + warm_start  (Section C.2)
+- Why: shows the alternation and the never-decreasing log-likelihood using the library itself, without writing a custom EM loop.
+
+### P2-07: Hand-check of the E-step and M-step  (Section C.4)
+- The E-step matched `predict_proba` to 1.3e-15. One more M-step moved the weights by at most 0.0034, because EM stops at a tolerance, not at the exact maximum.
+
+### P2-08: K-means as the "hard EM" comparison  (Sections C.5, D.1)
+- K-means scores higher on silhouette (0.216 vs 0.143) and ARI (0.185 vs 0.101), but gives no probabilities. The GMM flags 30.6% of patients as uncertain.
+
+### P2-09: Fit on all 768 patients, no train/test split
+- Why: clustering has no target to overfit, and BIC already penalises complexity. `Outcome` is only used after fitting.
+
+---
+
+## PBL 3: HMM (`pbl3_hmm.ipynb`)
+
+### P3-01: New sequential dataset = AIM-94 / UCI Diabetes (Kahn)  (Section B)
+- 70 insulin-dependent patients, with timestamped glucose, insulin, meal and exercise records. Stored in `data/uci_diabetes/` (from the UCI repository: archive.ics.uci.edu/static/public/34/diabetes.zip).
+- Why: real, public, diabetes-related, and naturally sequential (weeks of readings per patient).
+
+### P3-02: Observation = glucose only (codes 48, 57-64)  (Section B.2)
+- Dropped: unreadable values or dates (13) and readings below 20 mg/dL (3).
+- Insulin, meals and exercise are not used: a plain HMM has no inputs. An input-output HMM would be the extension.
+
+### P3-03: Keep patients with at least 50 readings, split 80/20 by patient  (Section B.4)
+- 68 patients kept: 54 train, 14 test. Splitting by reading would leak a patient's own pattern into the test set.
+
+### P3-04: One HMM step = one reading, no scaling  (Section B.4)
+- The median gap is 6 h; the irregular gaps are a stated limitation. mg/dL is kept so the state means are readable.
+
+### P3-05: K = 3 states (BIC prefers 5)  (Section C.1)
+- Evidence: BIC falls until K = 5 (117957.4), but K ≥ 4 adds states with overlapping means (for example 180 / 191 / 211) that differ only in spread. K = 3 gives 75 / 126 / 206 mg/dL, which match the clinical low / target / high bands.
+- Trade-off: a slightly worse fit for a much easier interpretation. We say this openly in the notebook.
+- Likely viva question → "Why not follow BIC?": BIC measures fit, not usefulness; the extra states are not separate glucose levels.
+
+### P3-06: Gaussian emissions, diag covariance, 5 random starts  (Sections C.1, C.2)
+- Baum-Welch finds a local maximum; the training curve even shows a plateau before a second climb.
+
+### P3-07: Hand-written forward and Viterbi in log space  (Section C.4)
+- They matched hmmlearn exactly (log-likelihood -600.2392, identical 104-step path). The forward filter is reused for forecasting.
+
+### P3-08: Evaluation = test log-likelihood vs a no-time GMM, plus a one-step forecast  (Section D)
+- Test log-likelihood per reading: HMM -5.6847, GMM -5.7313, single Gaussian -5.7861.
+- Forecast MAE: HMM 60.1, training mean 62.6, last reading 74.0 mg/dL.

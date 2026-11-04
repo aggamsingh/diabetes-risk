@@ -197,3 +197,91 @@ A text column with categories $c_1, \dots, c_K$ becomes $K$ columns: $x_{c_k} = 
 - **Used in:** Kaggle notebook, Section C.3.
 
 All other formulas (Ridge, logistic regression, Gini, random forest, metrics, CV, odds ratios, permutation importance, SHAP) are the same as above.
+
+---
+
+## 12. PBL 2: Gaussian Mixture Model and EM (`pbl2_alternate_em.ipynb`)
+
+### Mixture density
+$$p(x) = \sum_k \pi_k \mathcal{N}(x \mid \mu_k, \Sigma_k)$$
+$\pi_k$ = share of group $k$, $\mu_k$ = group centre, $\Sigma_k$ = group spread. **Used in:** Section A.2.
+
+### E-step (responsibilities)
+$$\gamma_{ik} = \frac{\pi_k \mathcal{N}(x_i \mid \mu_k, \Sigma_k)}{\sum_j \pi_j \mathcal{N}(x_i \mid \mu_j, \Sigma_j)}$$
+- **Intuition:** the probability that patient $i$ belongs to group $k$, given the current parameters.
+- **Used in:** Section A.3, checked by hand in C.4.
+
+### M-step
+$$N_k = \sum_i \gamma_{ik} \qquad \pi_k = \frac{N_k}{N} \qquad \mu_k = \frac{\sum_i \gamma_{ik} x_i}{N_k} \qquad \Sigma_k = \frac{\sum_i \gamma_{ik}(x_i - \mu_k)(x_i - \mu_k)^\top}{N_k}$$
+- **Intuition:** ordinary averages, weighted by the responsibilities.
+
+### Log-likelihood
+$$\log L = \sum_i \log \sum_k \pi_k \mathcal{N}(x_i \mid \mu_k, \Sigma_k)$$
+- **Intuition:** an E-step plus an M-step never decreases it, and EM stops at a local maximum.
+- **Used in:** Section C.2.
+
+### Hard EM = K-means
+$$z_i = \arg\min_k \lVert x_i - \mu_k \rVert^2 \qquad \mu_k = \text{mean of the points with } z_i = k$$
+**Used in:** Section C.5.
+
+### BIC and AIC
+$$\text{BIC} = -2\log L + p \log N \qquad \text{AIC} = -2\log L + 2p$$
+Lower is better; $p$ = number of free parameters. **Used in:** Section C.1.
+
+### Log transform
+$x' = \log(1 + x)$: shortens a long right tail so the feature looks more Gaussian. **Used in:** Section B.3.
+
+### Silhouette score
+$$s_i = \frac{b_i - a_i}{\max(a_i, b_i)}$$
+$a_i$ = mean distance to the patient's own group, $b_i$ = mean distance to the nearest other group. **Used in:** Section D.1.
+
+### Adjusted Rand Index
+Agreement between two groupings, corrected for chance: 1 = identical, 0 = random. **Used in:** Sections D.1 and D.5.
+
+### PCA (for plotting only)
+Projects the data onto the directions of largest variance (the eigenvectors of the covariance matrix). **Used in:** Sections C.2 and D.3.
+
+---
+
+## 13. PBL 3: Hidden Markov Model (`pbl3_hmm.ipynb`)
+
+### Markov property and transition matrix
+$$P(z_t \mid z_{1:t-1}) = P(z_t \mid z_{t-1}) \qquad a_{ij} = P(z_t = j \mid z_{t-1} = i)$$
+**Used in:** Section A.1.
+
+### HMM parameters
+$\lambda = (\pi, A, B)$, with Gaussian emissions $b_j(x) = \mathcal{N}(x \mid \mu_j, \sigma_j^2)$. **Used in:** Section A.2.
+
+### Forward algorithm
+$$\alpha_1(j) = \pi_j b_j(x_1) \qquad \alpha_t(j) = \Big[\sum_i \alpha_{t-1}(i) a_{ij}\Big] b_j(x_t) \qquad P(x_{1:T}) = \sum_j \alpha_T(j)$$
+**Used in:** Section A.3, hand-coded in C.4, reused in D.3.
+
+### Backward algorithm
+$$\beta_T(i) = 1 \qquad \beta_t(i) = \sum_j a_{ij}\, b_j(x_{t+1})\, \beta_{t+1}(j)$$
+
+### Forward-backward posterior
+$$\gamma_t(i) = \frac{\alpha_t(i)\beta_t(i)}{\sum_j \alpha_t(j)\beta_t(j)}$$
+**Used in:** Section D.2 (`predict_proba`).
+
+### Viterbi algorithm
+$$\delta_t(j) = \max_i\big[\delta_{t-1}(i)\, a_{ij}\big]\, b_j(x_t)$$
+Plus back-pointers to recover the best path. **Used in:** Sections C.4 and D.2.
+
+### Baum-Welch (EM for HMMs)
+- **E-step:** compute $\gamma_t(i)$ and $\xi_t(i,j) = P(z_t = i, z_{t+1} = j \mid x)$.
+- **M-step:** $\pi_i = \gamma_1(i)$, $a_{ij} = \sum_t \xi_t(i,j) / \sum_t \gamma_t(i)$, and $\mu_j$, $\sigma_j^2$ = the $\gamma$-weighted mean and variance.
+- **Used in:** Sections A.3 and C.2.
+
+### Log-sum-exp trick
+$$\log \sum_i e^{a_i} = m + \log \sum_i e^{a_i - m}, \qquad m = \max_i a_i$$
+Prevents underflow on long sequences (`logsumexp`). **Used in:** Section C.4.
+
+### Expected time in a state
+$E[\text{duration}_i] = 1/(1 - a_{ii})$ (mean of a geometric distribution). **Used in:** Section C.3.
+
+### Lag-1 autocorrelation
+$r_1 = \text{corr}(x_t, x_{t-1})$, computed within each patient. **Used in:** Section B.3.
+
+### One-step forecast
+$$P(z_{t+1} = j \mid x_{1:t}) = \sum_i P(z_t = i \mid x_{1:t})\, a_{ij} \qquad \hat{x}_{t+1} = \sum_j P(z_{t+1} = j \mid x_{1:t})\, \mu_j$$
+**Used in:** Section D.3, scored with MAE $= \frac{1}{n}\sum |y - \hat{y}|$.
