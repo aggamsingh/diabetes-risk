@@ -285,3 +285,12 @@ $r_1 = \text{corr}(x_t, x_{t-1})$, computed within each patient. **Used in:** Se
 ### One-step forecast
 $$P(z_{t+1} = j \mid x_{1:t}) = \sum_i P(z_t = i \mid x_{1:t})\, a_{ij} \qquad \hat{x}_{t+1} = \sum_j P(z_{t+1} = j \mid x_{1:t})\, \mu_j$$
 **Used in:** Section D.3, scored with MAE $= \frac{1}{n}\sum |y - \hat{y}|$.
+
+### k-step transitions
+$$P(z_{t+k} = j \mid z_t = i) = (A^k)_{ij}$$
+**Used in:** Section C.3b.
+
+### Stationary distribution
+$$\pi^* = \pi^* A \qquad \sum_i \pi^*_i = 1$$
+- **Intuition:** the long-run share of time in each state. It is the left eigenvector of $A$ with eigenvalue 1.
+- **Used in:** Section C.3b.

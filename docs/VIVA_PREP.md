@@ -604,3 +604,9 @@ Irregular time gaps (one step = one reading), approximate times on paper records
 
 **H17. How does this connect to the main project?**
 PBL 1 predicted risk from one snapshot. PBL 2 found risk profiles without labels. PBL 3 follows a patient over time and turns weeks of readings into an explainable summary (time in each regime).
+
+**H18. What is the stationary distribution, and what is yours?**
+The distribution π* that one more transition does not change (π* = π*A): the long-run share of time in each state. Ours is 0.188 Low, 0.280 Target, 0.532 High, close to the share of training readings Viterbi assigns to each state (0.208 / 0.304 / 0.487). So the learned A reproduces the data's long-run behaviour.
+
+**H19. What does Aᵏ tell you?**
+(Aᵏ)ᵢⱼ is the probability of being in state j after k steps when starting in state i. From Low: 0.563 High after one step, and only after about 100 steps is the start forgotten (close to π*). It converges slowly because Target is very sticky (0.97).
