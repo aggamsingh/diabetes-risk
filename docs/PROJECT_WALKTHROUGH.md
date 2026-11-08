@@ -28,7 +28,7 @@ The thread that ties PBL 2 and 3 together: both models are trained with EM. A GM
 
 **Libraries:** pandas, numpy, scikit-learn (GaussianMixture, KMeans, PCA, metrics), scipy (multivariate_normal, norm, logsumexp), hmmlearn (GaussianHMM), matplotlib/seaborn. Python 3.11. `RANDOM_STATE = 42` everywhere, so every number is reproducible. Both notebooks run top to bottom with no errors.
 
-**Rule we followed:** every number on the slides comes from a notebook output. One exception: the "Kaggle HbA1c and glucose have only 18 distinct values" fact on slide 4 came from a quick separate check of the Kaggle CSV.
+**Rule we followed:** every number on the slides comes from a notebook output. Exceptions: the "Kaggle HbA1c and glucose have only 18 distinct values" fact on slides 3 and 5, and the other dataset counts on slide 3, came from a direct count of the files in `data/`.
 
 ---
 
@@ -61,7 +61,27 @@ No code.
 
 Notebook: `pbl2_alternate_em.ipynb`
 
-## Slide 3: An alternative view of EM
+## Slide 3: Three datasets, one per task
+
+**What it says:** one comparison table of the three datasets used across the project.
+
+| | Kaggle Diabetes Prediction | Pima Indians Diabetes | UCI Diabetes (AIM-94) |
+|---|---|---|---|
+| Used in | PBL 1 · prediction | PBL 2 · EM clustering | PBL 3 · HMM |
+| Raw size | 100,000 × 9 | 768 × 9 | 29,330 × 4 · 70 patient files |
+| One row is | a patient | a patient | a timestamped event (20 documented codes) |
+| Attributes | 8: 4 numeric, 4 binary or categorical | 8, all numeric | date, time, code, value |
+| Label | diabetes: 8.5% | Outcome: 34.9% (held out) | none: states are hidden |
+| Cleaning | 3,854 duplicates removed | Insulin 48.7%, SkinThickness 29.6% missing: dropped | glucose codes only, 16 bad rows removed |
+| Modelled | 96,146 × 8 | 768 × 5 | 13,515 readings · 68 patients · 54 / 14 split |
+| Why chosen | large and labelled | continuous values (Glucose: 136 distinct) | time-ordered, median 120 readings per patient |
+| Why not reused | HbA1c and glucose: 18 distinct values each | one row per patient, no time order | |
+
+**Code behind it:** none. The numbers were counted directly from the files in `data/` (`data/kaggle_dataset/diabetes_prediction_dataset.csv`, `data/pima.csv`, `data/uci_diabetes/data-01` ... `data-70`). The 13,531 raw glucose rows (codes 48 and 57-64) become 13,515 after removing 13 bad dates or values and 3 readings below 20 mg/dL.
+
+**Where it fits:** the dataset story before any model. Each project asked a different question, so each needed a different kind of data: labelled patients for prediction, continuous values for Gaussian clustering, time-ordered readings for the HMM.
+
+## Slide 4: An alternative view of EM
 
 **What it says** (this is the Unit 3 chapter, in our words):
 - Each patient xᵢ has a hidden (latent) cluster label zᵢ.
@@ -75,11 +95,11 @@ Notebook: `pbl2_alternate_em.ipynb`
   - EM stops at a local optimum (|Lⁿᵉʷ − Lᵒˡᵈ| < ε), so we use 10 random restarts.
   - Hard assignment (γ = 0 or 1) is K-means; soft assignment is GMM.
 
-**Code behind it:** notebook Section A is the markdown theory with the same formulas in LaTeX. The library doing this is `sklearn.mixture.GaussianMixture`. We do not just trust it: slide 6 shows we re-derived the E-step and M-step by hand and matched the library.
+**Code behind it:** notebook Section A is the markdown theory with the same formulas in LaTeX. The library doing this is `sklearn.mixture.GaussianMixture`. We do not just trust it: slide 7 shows we re-derived the E-step and M-step by hand and matched the library.
 
 **Where it fits:** the theory our assigned topic is about. Every later PBL 2 slide is this algorithm running on real data.
 
-## Slide 4: Data preparation and feature selection
+## Slide 5: Data preparation and feature selection
 
 **What it says:** a table of every Pima column and what we did with it.
 
@@ -103,7 +123,7 @@ Notebook: `pbl2_alternate_em.ipynb`
 
 **Why it matters for the viva:** on a first try with Pregnancies included, one Gaussian collapsed onto the patients with exactly 0 pregnancies and BIC went wrong. That is why rule 3 exists. Median-filling half of Insulin would cause the same problem.
 
-## Slide 5: Choosing the number of components with BIC
+## Slide 6: Choosing the number of components with BIC
 
 **What it says:** a BIC table for K = 1 to 6 with diagonal and full covariance.
 - The lowest BIC is **10422.4**, at diag covariance with K = 3.
@@ -115,7 +135,7 @@ Notebook: `pbl2_alternate_em.ipynb`
 
 **Where it fits:** the Unit 3 topic "choosing the number of latent dimensions". This fixes K = 3 and diagonal covariance for everything after.
 
-## Slide 6: EM convergence: monotonic log-likelihood
+## Slide 7: EM convergence: monotonic log-likelihood
 
 **What it says:** a plot of EM running one step at a time, plus four numbers.
 - The average log-likelihood climbs from **−7.094** (step 1) to **−6.646** (step 60).
@@ -132,9 +152,9 @@ The small scatter plots show the groups after steps 1, 3 and 60, going from mixe
   - E-step by hand: `scipy.stats.multivariate_normal` gives N(xᵢ | μₖ, Σₖ). Multiply by πₖ, divide by the row sum to get γᵢₖ, and compare with `gmm.predict_proba`: max difference 1.3e-15.
   - M-step by hand: Nₖ = Σ γᵢₖ, πₖ = Nₖ / N, μₖ = (γᵀX) / Nₖ, compared with the fitted values. They differ by at most 0.0034 (weights) and 0.0073 (means), because EM stops at a tolerance, not at the exact maximum.
 
-**Where it fits:** proof that the algorithm on slide 3 is what actually ran.
+**Where it fits:** proof that the algorithm on slide 4 is what actually ran.
 
-## Slide 7: Three risk profiles from a 3-component GMM
+## Slide 8: Three risk profiles from a 3-component GMM
 
 **What it says:** three cards, one per cluster, each with its diabetes rate. The label was never used in fitting; it is only checked afterwards.
 
@@ -150,7 +170,7 @@ Bottom line: the diabetes rate rises 5× across clusters without using the label
 
 **Where it fits:** the main PBL 2 result. Unsupervised EM rediscovers clinically sensible risk groups, which is the "explainable" part of the project title.
 
-## Slide 8: Evaluating clustering output: soft vs hard
+## Slide 9: Evaluating clustering output: soft vs hard
 
 **What it says:**
 
@@ -181,7 +201,7 @@ End of PBL 2.
 
 Notebook: `pbl3_hmm.ipynb`
 
-## Slide 9: Sequential data: AIM-94 glucose records (UCI)
+## Slide 10: Sequential data: AIM-94 glucose records (UCI)
 
 **What it says:** the new sequential dataset (the Unit 4 rubric asks for one).
 - **13,515** clean glucose readings, **70** insulin-dependent patients, a median of **120** readings per patient, a median gap of **6 h** (mostly before meals).
@@ -198,7 +218,7 @@ Notebook: `pbl3_hmm.ipynb`
 
 **Where it fits:** the Unit 4 "sequential data" material: lag features, autocorrelation, and leakage-free splitting.
 
-## Slide 10: Hidden Markov Model: structure and algorithms
+## Slide 11: Hidden Markov Model: structure and algorithms
 
 **What it says:**
 - **λ = (π, A, B):** start probabilities, transition matrix and emissions. Hidden states follow a first-order Markov chain (low, target, high). Gaussian emissions: xₜ | zₜ = j ~ N(μⱼ, σⱼ²). Readings are conditionally independent given the state.
@@ -222,7 +242,7 @@ Notebook: `pbl3_hmm.ipynb`
 
 **Where it fits:** the Unit 4 HMM, forward-backward, Viterbi, scaling and EM topics in one slide. The K = 3 choice is a deliberate fit-vs-interpretability trade-off, and we say so openly.
 
-## Slide 11: Learned parameters: transitions and state durations
+## Slide 12: Learned parameters: transitions and state durations
 
 **What it says:**
 
@@ -255,7 +275,7 @@ States, with expected duration 1 / (1 − aᵢᵢ):
 
 **Where it fits:** interpretation of λ, and the Unit 4 Markov-model topics (transition matrix, Aᵏ, stationary distribution).
 
-## Slide 12: Viterbi decoding: test patient 48
+## Slide 13: Viterbi decoding: test patient 48
 
 **What it says:** one unseen test patient decoded by the model.
 - **Top plot:** each reading coloured by its Viterbi state (the MAP path).
@@ -267,7 +287,7 @@ States, with expected duration 1 / (1 − aᵢᵢ):
 
 **Note on the syllabus:** Viterbi gives the best JOINT path; forward-backward gives the best state per time step. They usually agree but need not. That is the "Viterbi vs posterior decoding" point in the notes.
 
-## Slide 13: Evaluation on 14 held-out patients
+## Slide 14: Evaluation on 14 held-out patients
 
 **What it says:** two tables, both computed on patients the model never saw.
 
@@ -289,11 +309,11 @@ Bottom line: both models share the same Gaussian emissions; the gain comes from 
 - **D.1:** `hmm.score(X_test, len_test) / len(X_test)` against `GaussianMixture(3).fit(X_train).score(X_test)` and `GaussianMixture(1).score(X_test)`. The GMM is exactly the PBL 2 model without time, so this is the fairest test of "does order help".
 - **D.3:** for each test patient, our own `forward()` gives the FILTERED probabilities P(zₜ | x₁:ₜ), using only the past (no peeking at the future). Multiplying by `transmat_` gives P(zₜ₊₁ | x₁:ₜ); multiplying by the state means gives the expected next reading. Its MAE is compared with two baselines.
 
-**Where it fits:** proves the sequential model is better on new patients. Filtering vs smoothing (the forward-backward chapter) shows up here: slide 12 uses smoothing (all readings), this slide uses filtering (past only), because a forecast cannot use the future.
+**Where it fits:** proves the sequential model is better on new patients. Filtering vs smoothing (the forward-backward chapter) shows up here: slide 13 uses smoothing (all readings), this slide uses filtering (past only), because a forecast cannot use the future.
 
 **Why the forecast gain is small:** readings are about 6 h apart and only weakly related (ρ(1) = 0.186), so the exact next value is hard to predict. Copying the last reading is worst because it copies that reading's noise.
 
-## Slide 14: Clinical interpretation of decoded states
+## Slide 15: Clinical interpretation of decoded states
 
 **What it says:**
 - **63.0%** of readings are High before breakfast (vs 49.4% before lunch), consistent with the dawn phenomenon.
@@ -307,7 +327,7 @@ Bottom line: both models share the same Gaussian emissions; the gain comes from 
 
 **Where it fits:** the "explainable" payoff of PBL 3. Hidden states turn weeks of noisy readings into something a clinician understands, similar to the clinical "time in range" measure.
 
-## Slide 15: Conclusions
+## Slide 16: Conclusions
 
 **What it says:**
 - **Gaussian Mixture Model (EM):** three risk clusters found without the label, 10.8% / 38.0% / 56.9% diabetic. The drivers agree with PBL 1, and 30.6% of patients are borderline.
@@ -327,23 +347,23 @@ No code. It wraps the two parts back into the one project story from slide 2.
 
 | Notebook section | Slide |
 |---|---|
-| A (theory) | 3 |
-| B.1-B.3 (data, features) | 4 |
-| C.1 (BIC) | 5 |
-| C.2-C.4 (EM steps, hand check) | 6 |
-| D.2 (profiles) | 7 |
-| C.5, D.1, D.3-D.5 (evaluation) | 8 |
+| A (theory) | 4 |
+| B.1-B.3 (data, features) | 5 |
+| C.1 (BIC) | 6 |
+| C.2-C.4 (EM steps, hand check) | 7 |
+| D.2 (profiles) | 8 |
+| C.5, D.1, D.3-D.5 (evaluation) | 9 |
 
 **`pbl3_hmm.ipynb`**
 
 | Notebook section | Slide |
 |---|---|
-| B.1-B.4 (data, sequence) | 9 |
-| A (theory), C.1, C.2, C.4 (fit, hand check) | 10 |
-| C.3, C.3b (parameters, π\*) | 11 |
-| D.2 (patient 48) | 12 |
-| D.1, D.3 (evaluation) | 13 |
-| D.4, D.5 (interpretation) | 14 |
+| B.1-B.4 (data, sequence) | 10 |
+| A (theory), C.1, C.2, C.4 (fit, hand check) | 11 |
+| C.3, C.3b (parameters, π\*) | 12 |
+| D.2 (patient 48) | 13 |
+| D.1, D.3 (evaluation) | 14 |
+| D.4, D.5 (interpretation) | 15 |
 
 ## Syllabus terms used (for the viva)
 

@@ -7,7 +7,16 @@ A course project (B.Tech CSE, AI/ML) that uses routine clinical measurements to:
 
 It also **explains** the predictions with odds ratios, permutation importance and SHAP.
 
-Everything is in one notebook: [`diabetes_risk.ipynb`](diabetes_risk.ipynb).
+Later reviews add unsupervised and sequential models (see [PBL 2 and PBL 3](#pbl-2-and-pbl-3)). The project has four notebooks:
+
+| Notebook | Review | Dataset |
+|---|---|---|
+| [`diabetes_risk.ipynb`](diabetes_risk.ipynb) | PBL 1 | Pima + Diabetes Progression |
+| [`diabetes_risk_kaggle.ipynb`](diabetes_risk_kaggle.ipynb) | PBL 1 (Review 1) | Kaggle Diabetes Prediction |
+| [`pbl2_alternate_em.ipynb`](pbl2_alternate_em.ipynb) | PBL 2 (Unit 3) | Pima |
+| [`pbl3_hmm.ipynb`](pbl3_hmm.ipynb) | PBL 3 (Unit 4) | UCI AIM-94 glucose sequences |
+
+Why each dataset was chosen, with row and column counts: [`docs/DATASETS.md`](docs/DATASETS.md).
 
 ## Results (test set)
 
@@ -73,15 +82,27 @@ All random steps use `RANDOM_STATE = 42`, so the results are the same on every r
 ```
 diabetes_risk.ipynb       Pima notebook (main deliverable)
 diabetes_risk_kaggle.ipynb   Kaggle notebook (same steps, larger dataset)
+pbl2_alternate_em.ipynb   PBL 2: Gaussian Mixture Model fitted by EM (Pima)
+pbl3_hmm.ipynb            PBL 3: Hidden Markov Model (UCI AIM-94)
 requirements.txt          pinned library versions
-data/                     pima.csv, progression.csv, kaggle_dataset/
-figures/                  all figures (fig01 ... fig23) for the report and slides
+data/pima.csv             Pima Indians Diabetes, 768 x 9 (PBL 1 Pima notebook, PBL 2)
+data/progression.csv      Diabetes Progression, 442 x 11 (Pima notebook regression)
+data/kaggle_dataset/      Kaggle Diabetes Prediction, 100,000 x 9 (PBL 1, Review 1)
+data/uci_diabetes/        UCI AIM-94, 70 patient files, 29,330 events (PBL 3)
+docs/DATASETS.md          every dataset: size, attributes, cleaning, why chosen
+figures/                  Pima notebook figures (fig01 ... fig23)
+figures/kaggle/           Kaggle notebook figures
+figures/pbl2/, pbl3/      PBL 2 and PBL 3 figures
 docs/DECISIONS.md         every design decision, with reasons
 docs/FORMULAS.md          every formula used, with symbols and intuition
 docs/VIVA_PREP.md         likely viva questions with answers (both notebooks)
-docs/PRESENTATION_OUTLINE.md   slide plan
+docs/PRESENTATION_OUTLINE.md   slide plan (PBL 1)
+docs/PBL2_3_PRESENTATION_OUTLINE.md   slide plan (PBL 2 and 3)
+docs/PROJECT_WALKTHROUGH.md   slide-by-slide explanation of slides and code
+docs/PRESENTATION_SCRIPT.md   spoken script, slide by slide
+docs/GLOSSARY.md          every technical term in plain language
 ```
 
 ## Limitations
 
-The Pima data contains only adult women of one ethnic group, both datasets are small, and much of the Insulin data is missing. The models show associations, not causes. This is a course prototype for decision support, **not a diagnostic tool**.
+The Pima data contains only adult women of one ethnic group and much of its Insulin data is missing. Pima (768) and Diabetes Progression (442) are small. The Kaggle data has rounded HbA1c and glucose values (18 distinct each). AIM-94 is 70 Type 1 patients from 1988 to 1991, with irregular gaps between readings. The models show associations, not causes. This is a course prototype for decision support, **not a diagnostic tool**.
