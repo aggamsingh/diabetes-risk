@@ -327,3 +327,37 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 ### P3-08: Evaluation = test log-likelihood vs a no-time GMM, plus a one-step forecast  (Section D)
 - Test log-likelihood per reading: HMM -5.6847, GMM -5.7313, single Gaussian -5.7861.
 - Forecast MAE: HMM 60.1, training mean 62.6, last reading 74.0 mg/dL.
+
+## PBL 4: Boosting and Bayesian Model Averaging (`pbl4_boosting_bma.ipynb`)
+
+### P4-01: Topic = Boosting + Bayesian model averaging (Unit 5, Combining Models)
+- Boosting has the most pages in the Unit 5 notes, is new compared with PBL 1 (which used one tree and a random forest), and can be checked by hand like EM and Viterbi.
+- BMA is cheap to add, reuses BIC from PBL 2, and answers the notes' last slide ("ensemble learning vs Bayesian model averaging").
+- Not chosen: CART and random forest as main topics (repeat PBL 1), GAM and MARS (extra libraries, hard to check by hand), adaptive basis function models (theory only).
+
+### P4-02: Dataset = Kaggle, same cleaning and split as PBL 1  (Section B)
+- Trees split on thresholds, so the 18 rounded HbA1c and glucose values that ruled Kaggle out for PBL 2 and 3 do not matter here.
+- Same 80/20 stratified split (`random_state = 42`), so results compare directly with PBL 1. BMI 27.32 treated as missing and filled with the training median (26.50).
+
+### P4-03: AdaBoost on decision stumps, 500 rounds  (Sections C.2, C.4)
+- Stumps are the textbook weak learner and keep every round readable (one feature, one threshold).
+- 500 rounds: test ROC-AUC still rises slowly (0.9753 at 200, 0.9768 at 500) and test error tracks training error, so no overfitting.
+
+### P4-04: Hand-written AdaBoost with the library's seed sequence  (Section C.3)
+- Only the stump fitting is borrowed. Each stump's seed is drawn exactly as scikit-learn draws it, so the comparison is round by round: 500 / 500 identical stumps, alpha and eps equal to 4.4e-15, identical predictions.
+- scikit-learn (SAMME) uses alpha = ln((1 - eps)/eps), without the 1/2 of the textbook. The vote is doubled, the sign is unchanged.
+
+### P4-05: Probabilities from sigmoid(vote), not `predict_proba`  (Section C.6)
+- The vote estimates the log-odds (minimiser of the exponential error), so p = sigmoid(sum alpha_m y_m). Log loss 0.436 with `predict_proba` vs 0.083 this way, same ROC-AUC.
+- scikit-learn's binary `decision_function` returns 2 * vote / sum(alpha), so the vote is decision_function * sum(alpha) / 2 (checked against our own vote).
+
+### P4-06: Robustness test with flipped training labels  (Section C.8)
+- 5% and 10% of training labels flipped at random, test labels left clean. Shows the theory's warning (flipped patients hold 36.2% of the weight) and its real size (AdaBoost loses 0.009 ROC-AUC, random forest 0.023, gradient boosting 0.005).
+
+### P4-07: BMA over 256 logistic regressions, evidence from BIC  (Section D)
+- 8 feature groups (gender and smoking one group each), every subset = one model. Logistic regression because BIC needs a likelihood and a clear parameter count; trees have neither.
+- `C = 1e6` makes the fits effectively maximum likelihood, which BIC assumes. Equal prior on every model.
+- Weights computed as exp(-(BIC - min BIC)/2) to avoid underflow.
+
+### P4-08: Small-data experiment (200 to 5,000 patients, 10 subsets each)  (Section D.3)
+- On all 76,916 patients the posterior puts weight 1.000 on one model, so BMA equals model selection. The subsets show when BMA actually helps: at 200 patients, log loss 0.159 vs 0.234 for the best single model.

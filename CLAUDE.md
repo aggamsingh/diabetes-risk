@@ -319,6 +319,14 @@ Assigned topics (team sheet): PBL 2 = **Alternate EM** (Unit 3, existing dataset
 - `pbl3_hmm.ipynb`: Gaussian HMM (`hmmlearn`) on AIM-94 / UCI Diabetes glucose sequences in `data/uci_diabetes/`, split by patient, hand-written forward and Viterbi checked against the library. Figures in `figures/pbl3/`.
 - Same style rules as above (what/why/formula cells, Observation cells, numbers only from outputs). Library code is allowed and expected; `hmmlearn` is the one extra library.
 - Docs: PBL 2 / PBL 3 sections at the end of `DECISIONS.md`, `FORMULAS.md`, `VIVA_PREP.md`, plus `docs/PBL2_3_PRESENTATION_OUTLINE.md`, `docs/PROJECT_WALKTHROUGH.md` (slides and code), `docs/PRESENTATION_SCRIPT.md` (spoken script), `docs/GLOSSARY.md` (plain-language terms) and `docs/DATASETS.md` (sizes, attributes, why each dataset). The deck has 16 slides; keep slide numbers in these docs in sync with it.
+
+## 12. PBL 4 Notebook
+
+Topic (Unit 5, Combining Models): **Boosting** (AdaBoost) and **Bayesian model averaging**, chosen by the team from the Unit 5 notes.
+
+- `pbl4_boosting_bma.ipynb`: Kaggle data with the PBL 1 split; AdaBoost on 500 stumps with a hand-written AdaBoost checked against scikit-learn; stump, CART, random forest and gradient boosting baselines; label-noise test; BMA over 256 logistic regressions with BIC weights, plus a small-data experiment. Figures in `figures/pbl4/`.
+- Same style rules (what/why/formula cells, Observation cells, numbers only from outputs). No new libraries.
+- Docs: PBL 4 sections at the end of `DECISIONS.md` (P4-xx), `FORMULAS.md` (section 14) and `VIVA_PREP.md` (B1-B17).
 - Commits for this work are authored by Jai (the user's own git identity), not Aggam.
 
 **Start by reading this file, then confirm your understanding and propose the plan for Section A.**

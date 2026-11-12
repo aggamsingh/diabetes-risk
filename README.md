@@ -7,7 +7,7 @@ A course project (B.Tech CSE, AI/ML) that uses routine clinical measurements to:
 
 It also **explains** the predictions with odds ratios, permutation importance and SHAP.
 
-Later reviews add unsupervised and sequential models (see [PBL 2 and PBL 3](#pbl-2-and-pbl-3)). The project has four notebooks:
+Later reviews add unsupervised, sequential and combined models (see [PBL 2 and PBL 3](#pbl-2-and-pbl-3) and [PBL 4](#pbl-4)). The project has five notebooks:
 
 | Notebook | Review | Dataset |
 |---|---|---|
@@ -15,6 +15,7 @@ Later reviews add unsupervised and sequential models (see [PBL 2 and PBL 3](#pbl
 | [`diabetes_risk_kaggle.ipynb`](diabetes_risk_kaggle.ipynb) | PBL 1 (Review 1) | Kaggle Diabetes Prediction |
 | [`pbl2_alternate_em.ipynb`](pbl2_alternate_em.ipynb) | PBL 2 (Unit 3) | Pima |
 | [`pbl3_hmm.ipynb`](pbl3_hmm.ipynb) | PBL 3 (Unit 4) | UCI AIM-94 glucose sequences |
+| [`pbl4_boosting_bma.ipynb`](pbl4_boosting_bma.ipynb) | PBL 4 (Unit 5) | Kaggle Diabetes Prediction |
 
 Why each dataset was chosen, with row and column counts: [`docs/DATASETS.md`](docs/DATASETS.md).
 
@@ -52,6 +53,25 @@ Why each dataset was chosen, with row and column counts: [`docs/DATASETS.md`](do
 Figures are in `figures/pbl2/` and `figures/pbl3/`; slide plan in `docs/PBL2_3_PRESENTATION_OUTLINE.md`.
 The AIM-94 data was provided by Michael Kahn, MD, PhD, Washington University, St. Louis, MO (UCI Machine Learning Repository).
 
+## PBL 4
+
+Unit 5, Combining Models: [`pbl4_boosting_bma.ipynb`](pbl4_boosting_bma.ipynb), on the Kaggle data with the same split as PBL 1. A full run takes about 4 minutes.
+
+| Model | Test ROC-AUC | Avg precision | Log loss |
+|---|---|---|---|
+| One decision stump (HbA1c <= 6.70) | 0.737 | 0.521 | 0.186 |
+| One CART tree, depth 6 | 0.962 | 0.825 | 0.093 |
+| Random forest (bagging) | 0.970 | 0.871 | 0.093 |
+| **AdaBoost, 500 stumps** | **0.977** | 0.879 | 0.083 |
+| Gradient boosting (cross-entropy) | 0.977 | 0.881 | 0.083 |
+| Bayesian model averaging, 256 logistic models | 0.960 | 0.817 | 0.117 |
+
+- A hand-written AdaBoost reproduces scikit-learn exactly (500 of 500 stumps, identical predictions).
+- Boosting concentrates on diabetic patients with near-normal lab values; with 5% flipped labels, those patients hold 36% of the weight.
+- Bayesian model averaging puts all its weight on one model with 76,916 patients, but with 200 patients it spreads over about 8 models and beats the single best model on log loss (0.159 vs 0.234).
+
+Figures are in `figures/pbl4/`.
+
 ## Rubric map
 
 | # | Rubric item | Notebook section |
@@ -84,6 +104,7 @@ diabetes_risk.ipynb       Pima notebook (main deliverable)
 diabetes_risk_kaggle.ipynb   Kaggle notebook (same steps, larger dataset)
 pbl2_alternate_em.ipynb   PBL 2: Gaussian Mixture Model fitted by EM (Pima)
 pbl3_hmm.ipynb            PBL 3: Hidden Markov Model (UCI AIM-94)
+pbl4_boosting_bma.ipynb   PBL 4: AdaBoost and Bayesian model averaging (Kaggle)
 requirements.txt          pinned library versions
 data/pima.csv             Pima Indians Diabetes, 768 x 9 (PBL 1 Pima notebook, PBL 2)
 data/progression.csv      Diabetes Progression, 442 x 11 (Pima notebook regression)
@@ -92,7 +113,7 @@ data/uci_diabetes/        UCI AIM-94, 70 patient files, 29,330 events (PBL 3)
 docs/DATASETS.md          every dataset: size, attributes, cleaning, why chosen
 figures/                  Pima notebook figures (fig01 ... fig23)
 figures/kaggle/           Kaggle notebook figures
-figures/pbl2/, pbl3/      PBL 2 and PBL 3 figures
+figures/pbl2/, pbl3/, pbl4/   PBL 2, 3 and 4 figures
 docs/DECISIONS.md         every design decision, with reasons
 docs/FORMULAS.md          every formula used, with symbols and intuition
 docs/VIVA_PREP.md         likely viva questions with answers (both notebooks)

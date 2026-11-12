@@ -294,3 +294,41 @@ $$P(z_{t+k} = j \mid z_t = i) = (A^k)_{ij}$$
 $$\pi^* = \pi^* A \qquad \sum_i \pi^*_i = 1$$
 - **Intuition:** the long-run share of time in each state. It is the left eigenvector of $A$ with eigenvalue 1.
 - **Used in:** Section C.3b.
+
+## 14. PBL 4: Boosting and Bayesian Model Averaging (`pbl4_boosting_bma.ipynb`)
+
+### AdaBoost
+Labels $t_n \in \{-1, +1\}$, weak classifier $y_m(x) \in \{-1, +1\}$, start with $w_n^{(1)} = 1/N$.
+$$\epsilon_m = \frac{\sum_n w_n^{(m)} I(y_m(x_n) \ne t_n)}{\sum_n w_n^{(m)}} \qquad \alpha_m = \ln\frac{1-\epsilon_m}{\epsilon_m} \qquad w_n^{(m+1)} = w_n^{(m)} \exp\big(\alpha_m I(y_m(x_n) \ne t_n)\big)$$
+$$Y_M(x) = \operatorname{sign}\Big(\sum_m \alpha_m y_m(x)\Big)$$
+- **Intuition:** a smaller error gives a bigger say; misclassified points get heavier, so the next stump looks at them.
+- The textbook uses $\tfrac{1}{2}\ln\frac{1-\epsilon_m}{\epsilon_m}$; scikit-learn drops the $\tfrac{1}{2}$, which doubles the vote but not its sign.
+- **Used in:** Sections A.2, C.2, C.3.
+
+### Exponential error and the training bound
+$$E = \frac{1}{N}\sum_n \exp\big(-t_n f_m(x_n)\big), \qquad f_m = \tfrac{1}{2}\sum_{l \le m} \alpha_l y_l \qquad E = \prod_{l \le m} 2\sqrt{\epsilon_l(1-\epsilon_l)} \;\ge\; \text{training error rate}$$
+- **Intuition:** a misclassified point ($t f < 0$) costs exponentially more, which is why boosting chases hard points and is sensitive to wrong labels.
+- **Used in:** Sections A.3, C.3, C.8.
+
+### Boosted vote as a probability
+$$\arg\min_f \mathbb{E}[e^{-t f(x)}] = \tfrac{1}{2}\ln\frac{p(t=1 \mid x)}{p(t=-1 \mid x)} \quad\Rightarrow\quad p(t = 1 \mid x) = \sigma\Big(\sum_m \alpha_m y_m(x)\Big)$$
+**Used in:** Section C.6 (log loss 0.436 to 0.083).
+
+### Other error functions (for comparison)
+Cross-entropy $\ln(1 + e^{-ty})$, hinge $\max(0, 1 - ty)$, misclassification $I(ty < 0)$. **Used in:** Section C.6 figure.
+
+### Average precision
+$\text{AP} = \sum_k (R_k - R_{k-1}) P_k$: area under the precision-recall curve. Better than ROC-AUC when positives are rare (8.8% here). **Used in:** Section C.
+
+### Brier score
+$\frac{1}{N}\sum_n (p_n - y_n)^2$: mean squared error of the predicted probabilities. **Used in:** Section C.6.
+
+### Bayesian model averaging
+$$p(t \mid x, D) = \sum_k p(t \mid x, M_k, D)\, p(M_k \mid D) \qquad p(M_k \mid D) \approx \frac{\exp(-\tfrac{1}{2}\mathrm{BIC}_k)}{\sum_j \exp(-\tfrac{1}{2}\mathrm{BIC}_j)}$$
+with $\mathrm{BIC}_k = -2\ln L_k + p_k \ln N$ and an equal prior on every model.
+- **Intuition:** each model votes in proportion to how well the data supports it, after paying for its size.
+- **Used in:** Sections A.4, D.1 to D.3.
+
+### Posterior inclusion probability
+$$\text{PIP}(\text{feature}) = \sum_{k:\ \text{feature} \in M_k} p(M_k \mid D)$$
+**Used in:** Sections D.2 and D.4.

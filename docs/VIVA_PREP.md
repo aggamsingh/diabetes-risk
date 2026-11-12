@@ -610,3 +610,56 @@ The distribution π* that one more transition does not change (π* = π*A): the 
 
 **H19. What does Aᵏ tell you?**
 (Aᵏ)ᵢⱼ is the probability of being in state j after k steps when starting in state i. From Low: 0.563 High after one step, and only after about 100 steps is the start forgotten (close to π*). It converges slowly because Target is very sticky (0.97).
+
+## PBL 4: Boosting and Bayesian Model Averaging (`pbl4_boosting_bma.ipynb`)
+
+**B1. What is boosting, in one line?**
+Train weak models one after another, each focusing on the patients the previous ones got wrong, and combine them in a weighted vote.
+
+**B2. How is boosting different from bagging (random forest)?**
+Bagging trains deep trees in parallel on bootstrap samples and gives them equal votes; it mainly reduces variance. Boosting trains weak models in sequence on reweighted data and gives better models a bigger say; it mainly reduces bias. Here boosting won: ROC-AUC 0.977 vs 0.970.
+
+**B3. Walk through one round of AdaBoost.**
+Fit a stump with the current weights, compute its weighted error ε, give it the say α = ln((1 − ε)/ε), multiply the weight of every misclassified patient by e^α, and normalise. Round 1 split HbA1c at 6.70 with ε = 0.048, so α = 2.98.
+
+**B4. Why is the textbook α half of yours?**
+The textbook uses ½ ln((1 − ε)/ε); scikit-learn's SAMME drops the ½. Every α doubles, the sign of the vote does not change, so predictions are identical. We used scikit-learn's form to match it number for number.
+
+**B5. How do you know you understand AdaBoost and did not just call a library?**
+We wrote the loop ourselves. All 500 stumps match the library's, α and ε agree to 4.4e-15, test predictions are identical, and the exponential error equals the product bound ∏ 2√(ε(1 − ε)) to 4e-16.
+
+**B6. What is the exponential error, and why does it matter?**
+E = Σ exp(−t f(x)). AdaBoost is a greedy way of minimising it. A wrong prediction costs exponentially more, which explains why boosting chases hard points, why it is sensitive to wrong labels, and why its vote estimates the log-odds.
+
+**B7. Which patients did boosting focus on?**
+The heaviest 1% (774 patients, 28.4% of the weight) were all diabetic, with median HbA1c 6.1 and glucose 155; 63.6% were below both clinical cut-offs, vs 15.8% of other diabetic patients. Boosting concentrates on diabetics whose lab values look normal.
+
+**B8. Why didn't you use `predict_proba`?**
+It divides the vote by Σα, which squeezes every probability towards 0.5 (log loss 0.436). The vote estimates the log-odds, so σ(vote) is the right conversion: log loss 0.083 and a calibration curve on the diagonal, with the same ROC-AUC.
+
+**B9. Is AdaBoost sensitive to noisy labels?**
+The mechanism is visible: with 5% of labels flipped, those patients end up with 36.2% of the weight. The damage was small (ROC-AUC 0.977 to 0.968 with 10% noise) because a stump cannot memorise one patient; the random forest lost more (0.970 to 0.947). Gradient boosting, with the gentler cross-entropy error, lost least.
+
+**B10. Does AdaBoost overfit with 500 rounds?**
+Not here: test error (2.88%) stays close to training error (2.93%) and test ROC-AUC still rises. With 10% noisy labels it peaks at round 300 and then slips slightly, so early stopping would help on noisy data.
+
+**B11. What is Bayesian model averaging?**
+Average the predictions of all candidate models, weighted by each model's posterior probability p(M | D). We used 256 logistic regressions (every subset of 8 feature groups) and approximated the evidence with BIC: weight ∝ exp(−BIC/2).
+
+**B12. Why did BMA give the same result as the best model on the full data?**
+With 76,916 patients the evidence is decisive: the second-best model is 32 BIC units worse, about 1 in 9 million as probable. All weight goes to one model, and BMA becomes model selection. That is expected: BMA assumes one model is true and becomes sure which one with enough data.
+
+**B13. So when does BMA help?**
+When data is scarce. With 200 patients the best model gets only 47% of the weight, 8 models share 95%, and BMA's test log loss is 0.159 vs 0.234 for the single best model, which is overconfident.
+
+**B14. Difference between BMA and an ensemble?**
+BMA assumes one candidate is the true model and weights by evidence, so it converges to one model. An ensemble assumes no single member is right and builds a richer combined model. Here: BMA 0.960, AdaBoost 0.977.
+
+**B15. What is a posterior inclusion probability?**
+The total posterior weight of the models that contain a feature. With 200 patients: glucose 1.00, HbA1c 0.99, age 0.52, BMI 0.40, smoking 0.00. Same order as AdaBoost's feature importance, plus a measure of certainty.
+
+**B16. Why logistic regression for BMA and not trees?**
+BIC needs a likelihood and a clear number of parameters. A tree has neither in a clean form. That is also why BMA (0.960) stays below the tree ensembles: a linear log-odds model cannot capture threshold effects.
+
+**B17. Limitations?**
+One split of one dataset, stumps only, BIC is an approximation with an equal prior, the Kaggle data looks synthetic (rounded values, labels close to the clinical cut-offs), and associations, not diagnoses.

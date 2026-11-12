@@ -6,7 +6,7 @@ All counts below were recounted directly from the files in `data/`.
 
 | | Dataset | Used in | Why this one |
 |---|---|---|---|
-| 1 | Kaggle Diabetes Prediction Dataset | Project 1 (Review 1) | Large and labelled, suits prediction |
+| 1 | Kaggle Diabetes Prediction Dataset | Project 1 (Review 1) and Project 4 (Unit 5, boosting) | Large and labelled, suits prediction and tree ensembles |
 | 2 | Pima Indians Diabetes Dataset | Project 2 (Unit 3, Expectation-Maximisation) | Continuous measurements, suits bell-curve (Gaussian) clustering |
 | 3 | University of California Irvine Diabetes Dataset (AIM-94) | Project 3 (Unit 4, Hidden Markov Model) | Readings in time order, suits sequence modelling |
 
@@ -59,6 +59,8 @@ Each project asked a different question, and each question needed a different ki
 1. HbA1c and glucose have only 18 distinct values each: they are rounded to fixed levels, not smooth measurements.
 2. 4 of the 8 attributes are categories or yes/no (gender, hypertension, heart disease, smoking).
 3. A Gaussian Mixture Model fits bell curves, which need continuous numbers. On repeated fixed values a bell curve collapses onto that one value and the model breaks (the same thing happened with Pregnancies in Pima).
+
+**Why it came back for Project 4 (boosting and Bayesian model averaging):** decision trees split on thresholds, so rounded values and yes/no columns are no problem. Project 4 uses the same cleaning and the same 76,916 / 19,230 split as Project 1, so the results compare directly.
 
 ---
 
