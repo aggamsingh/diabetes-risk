@@ -361,3 +361,8 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### P4-08: Small-data experiment (200 to 5,000 patients, 10 subsets each)  (Section D.3)
 - On all 76,916 patients the posterior puts weight 1.000 on one model, so BMA equals model selection. The subsets show when BMA actually helps: at 200 patients, log loss 0.159 vs 0.234 for the best single model.
+
+### P4-09: Repeat the comparison without blood tests  (Section E)
+- HbA1c and glucose are part of how diabetes is diagnosed, so models that use them are partly circular (the first stump, HbA1c > 6.70, is never wrong about the patients it flags). The realistic screening question is risk before any blood test.
+- Same split and models on age, hypertension, heart disease, BMI, gender and smoking. BMA reuses the 64 already-fitted models without blood tests and renormalises their weights.
+- Result: every model loses about 0.15 ROC-AUC (AdaBoost 0.977 to 0.820), and plain logistic regression (0.825) is as good as the ensembles. Ensembles help when there are sharp thresholds; for screening the simple model is enough. Matches the PBL 1 no-blood-test model (0.825).
