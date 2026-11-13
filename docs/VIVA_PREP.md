@@ -663,3 +663,12 @@ BIC needs a likelihood and a clear number of parameters. A tree has neither in a
 
 **B17. Limitations?**
 One split of one dataset, stumps only, BIC is an approximation with an equal prior, the Kaggle data looks synthetic (rounded values, labels close to the clinical cut-offs), and associations, not diagnoses.
+
+**B18. Isn't 0.977 inflated, since HbA1c and glucose define diabetes?**
+Yes, partly. That is why Section E repeats everything without blood tests: every model loses about 0.15 of ROC-AUC (AdaBoost 0.977 to 0.820). The no-blood-test numbers are the realistic screening result, and they match PBL 1 (0.825).
+
+**B19. Without blood tests, does boosting still help?**
+No. Plain logistic regression (0.825) equals gradient boosting (0.825) and beats AdaBoost (0.820) and the random forest (0.804). Boosting wins when the signal has sharp thresholds, like HbA1c above 6.7; without blood tests risk rises smoothly with age and BMI, which a linear model already captures. So for screening we would choose the simpler, explainable model.
+
+**B20. What drives the no-blood-test models?**
+Age (AdaBoost importance 0.758, stumps at 26.5, 44.5, 53.5 and 60.5 years), then BMI (0.146, a stump at 30.7, near the obesity line of 30). The first stump's error (0.088) equals the diabetic share: without blood tests no single rule separates the classes.
