@@ -57,14 +57,17 @@ The AIM-94 data was provided by Michael Kahn, MD, PhD, Washington University, St
 
 Unit 5, Combining Models: [`pbl4_boosting_bma.ipynb`](pbl4_boosting_bma.ipynb), on the Kaggle data with the same split as PBL 1. A full run takes about 4 minutes.
 
-| Model | Test ROC-AUC | Avg precision | Log loss |
-|---|---|---|---|
-| One decision stump (HbA1c <= 6.70) | 0.737 | 0.521 | 0.186 |
-| One CART tree, depth 6 | 0.962 | 0.825 | 0.093 |
-| Random forest (bagging) | 0.970 | 0.871 | 0.093 |
-| **AdaBoost, 500 stumps** | **0.977** | 0.879 | 0.083 |
-| Gradient boosting (cross-entropy) | 0.977 | 0.881 | 0.083 |
-| Bayesian model averaging, 256 logistic models | 0.960 | 0.817 | 0.117 |
+| Model | Test ROC-AUC, all features | Avg precision | Log loss | Test ROC-AUC, no blood tests |
+|---|---|---|---|---|
+| One decision stump | 0.737 | 0.521 | 0.186 | 0.706 |
+| One CART tree, depth 6 | 0.962 | 0.825 | 0.093 | 0.816 |
+| Random forest (bagging) | 0.970 | 0.871 | 0.093 | 0.804 |
+| **AdaBoost, 500 stumps** | **0.977** | 0.879 | 0.083 | 0.820 |
+| Gradient boosting (cross-entropy) | 0.977 | 0.881 | 0.083 | 0.825 |
+| Bayesian model averaging (logistic models) | 0.960 | 0.817 | 0.117 | 0.825 |
+| Logistic regression | | | | 0.825 |
+
+- **Realistic screening:** HbA1c and glucose are part of how diabetes is diagnosed, so the all-features numbers are inflated. Without them every model loses about 0.15 ROC-AUC, and plain logistic regression is as good as any ensemble (0.825, same as PBL 1).
 
 - A hand-written AdaBoost reproduces scikit-learn exactly (500 of 500 stumps, identical predictions).
 - Boosting concentrates on diabetic patients with near-normal lab values; with 5% flipped labels, those patients hold 36% of the weight.
