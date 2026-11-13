@@ -324,9 +324,9 @@ Assigned topics (team sheet): PBL 2 = **Alternate EM** (Unit 3, existing dataset
 
 Topic (Unit 5, Combining Models): **Boosting** (AdaBoost) and **Bayesian model averaging**, chosen by the team from the Unit 5 notes.
 
-- `pbl4_boosting_bma.ipynb`: Kaggle data with the PBL 1 split; AdaBoost on 500 stumps with a hand-written AdaBoost checked against scikit-learn; stump, CART, random forest and gradient boosting baselines; label-noise test; BMA over 256 logistic regressions with BIC weights, plus a small-data experiment. Figures in `figures/pbl4/`.
+- `pbl4_boosting_bma.ipynb`: Kaggle data with the PBL 1 split; AdaBoost on 500 stumps with a hand-written AdaBoost checked against scikit-learn; stump, CART, random forest and gradient boosting baselines; label-noise test; repeat without blood tests (Section E); BMA over 256 logistic regressions with BIC weights, plus a small-data experiment. Figures in `figures/pbl4/`.
 - Same style rules (what/why/formula cells, Observation cells, numbers only from outputs). No new libraries.
-- Docs: PBL 4 sections at the end of `DECISIONS.md` (P4-xx), `FORMULAS.md` (section 14) and `VIVA_PREP.md` (B1-B17).
+- Docs: PBL 4 sections at the end of `DECISIONS.md` (P4-xx), `FORMULAS.md` (section 14) and `VIVA_PREP.md` (B1-B20).
 - Commits for this work are authored by Jai (the user's own git identity), not Aggam.
 
 **Start by reading this file, then confirm your understanding and propose the plan for Section A.**
