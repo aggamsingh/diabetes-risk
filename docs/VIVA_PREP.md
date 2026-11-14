@@ -622,8 +622,8 @@ Bagging trains deep trees in parallel on bootstrap samples and gives them equal 
 **B3. Walk through one round of AdaBoost.**
 Fit a stump with the current weights, compute its weighted error ε, give it the say α = ln((1 − ε)/ε), multiply the weight of every misclassified patient by e^α, and normalise. Round 1 split HbA1c at 6.70 with ε = 0.048, so α = 2.98.
 
-**B4. Why is the textbook α half of yours?**
-The textbook uses ½ ln((1 − ε)/ε); scikit-learn's SAMME drops the ½. Every α doubles, the sign of the vote does not change, so predictions are identical. We used scikit-learn's form to match it number for number.
+**B4. Some books write α = ½ ln((1 − ε)/ε). Which one is right?**
+Both give the same classifier. Bishop (our textbook) and scikit-learn use α = ln((1 − ε)/ε) and write the combined function as f = ½ Σ αy. Other texts put the ½ inside α. Halving every α does not change the sign of the vote, so the predictions are identical.
 
 **B5. How do you know you understand AdaBoost and did not just call a library?**
 We wrote the loop ourselves. All 500 stumps match the library's, α and ε agree to 4.4e-15, test predictions are identical, and the exponential error equals the product bound ∏ 2√(ε(1 − ε)) to 4e-16.
@@ -638,7 +638,7 @@ The heaviest 1% (774 patients, 28.4% of the weight) were all diabetic, with medi
 It divides the vote by Σα, which squeezes every probability towards 0.5 (log loss 0.436). The vote estimates the log-odds, so σ(vote) is the right conversion: log loss 0.083 and a calibration curve on the diagonal, with the same ROC-AUC.
 
 **B9. Is AdaBoost sensitive to noisy labels?**
-The mechanism is visible: with 5% of labels flipped, those patients end up with 36.2% of the weight. The damage was small (ROC-AUC 0.977 to 0.968 with 10% noise) because a stump cannot memorise one patient; the random forest lost more (0.970 to 0.947). Gradient boosting, with the gentler cross-entropy error, lost least.
+The mechanism is visible: with 5% of labels flipped, those patients end up with 36.2% of the weight. The damage was small (ROC-AUC 0.977 to 0.968 with 10% noise) because a stump cannot memorise one patient. The random forest with small leaves (5) lost more (0.970 to 0.947), but with leaves of 50 it lost only 0.004, so robustness here depends mostly on model capacity. Gradient boosting, with the gentler cross-entropy error, lost 0.005 at default settings. Three other random flips give the same results.
 
 **B10. Does AdaBoost overfit with 500 rounds?**
 Not here: test error (2.88%) stays close to training error (2.93%) and test ROC-AUC still rises. With 10% noisy labels it peaks at round 300 and then slips slightly, so early stopping would help on noisy data.
@@ -672,3 +672,21 @@ No. Plain logistic regression (0.825) equals gradient boosting (0.825) and beats
 
 **B20. What drives the no-blood-test models?**
 Age (AdaBoost importance 0.758, stumps at 26.5, 44.5, 53.5 and 60.5 years), then BMI (0.146, a stump at 30.7, near the obesity line of 30). The first stump's error (0.088) equals the diabetic share: without blood tests no single rule separates the classes.
+
+**B21. Did the model really discover the clinical cut-offs?**
+No, and we do not claim it. In this dataset HbA1c >= 6.8 or glucose >= 220 means diabetic 100% of the time, and no non-diabetic is above 6.6 or 200. The stumps at 6.70 and 210 sit in those gaps. The data seems to have been generated with cut-offs near the clinical lines (6.5, 200), and boosting found that rule.
+
+**B22. Your differences are in the third decimal. Is the ranking real or luck of the split?**
+We checked with 5-fold cross-validation. With all features, boosting beats the random forest in 5 of 5 folds (0.978 vs 0.972). AdaBoost and gradient boosting are tied. Without blood tests, gradient boosting leads logistic regression in every fold, but only by 0.002, which is smaller than the fold-to-fold spread, so we call them practically equal.
+
+**B23. Isn't the random forest just untuned? That makes your comparison unfair.**
+Partly fair. We used default-style settings for all ensembles and said so. The noise result is the one that changes: with leaves of 50 instead of 5 the forest loses only 0.004 under 10% noise, less than AdaBoost. That is why we say robustness depends on model capacity, not on bagging versus boosting. On clean data the tuned PBL 1 forest (0.974) is still below AdaBoost (0.977).
+
+**B24. Only 69% recall at threshold 0.5. How is that useful for screening?**
+0.5 is the wrong threshold when only 8.8% are positive. Without blood tests, logistic regression at 0.08 finds 80.8% of diabetic patients and flags 36% of people for a blood test. With blood tests, AdaBoost at 0.2 finds 79.5% with precision 0.718.
+
+**B25. Why should we trust BIC weights in BMA?**
+BIC is a large-sample approximation to the evidence and assumes maximum-likelihood fits, which is why we used C = 1e6. With 76,916 patients the approximation is good, and it is the same criterion we used in PBL 2. With 200 patients it is rougher, which is one more reason to average rather than pick one model there.
+
+**B26. Your no-blood-test BMI has 22.6% filled-in values. Does that bias anything?**
+It weakens BMI: a filled-in median carries no information, so BMI's importance (0.146) is a lower bound. Age is unaffected. We list this as a limitation.
