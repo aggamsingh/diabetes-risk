@@ -302,7 +302,7 @@ Labels $t_n \in \{-1, +1\}$, weak classifier $y_m(x) \in \{-1, +1\}$, start with
 $$\epsilon_m = \frac{\sum_n w_n^{(m)} I(y_m(x_n) \ne t_n)}{\sum_n w_n^{(m)}} \qquad \alpha_m = \ln\frac{1-\epsilon_m}{\epsilon_m} \qquad w_n^{(m+1)} = w_n^{(m)} \exp\big(\alpha_m I(y_m(x_n) \ne t_n)\big)$$
 $$Y_M(x) = \operatorname{sign}\Big(\sum_m \alpha_m y_m(x)\Big)$$
 - **Intuition:** a smaller error gives a bigger say; misclassified points get heavier, so the next stump looks at them.
-- The textbook uses $\tfrac{1}{2}\ln\frac{1-\epsilon_m}{\epsilon_m}$; scikit-learn drops the $\tfrac{1}{2}$, which doubles the vote but not its sign.
+- This is Bishop's form and scikit-learn's. Some texts write $\tfrac{1}{2}\ln\frac{1-\epsilon_m}{\epsilon_m}$, which halves the vote but not its sign.
 - **Used in:** Sections A.2, C.2, C.3.
 
 ### Exponential error and the training bound
