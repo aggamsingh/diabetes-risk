@@ -345,7 +345,7 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 
 ### P4-04: Hand-written AdaBoost with the library's seed sequence  (Section C.3)
 - Only the stump fitting is borrowed. Each stump's seed is drawn exactly as scikit-learn draws it, so the comparison is round by round: 500 / 500 identical stumps, alpha and eps equal to 4.4e-15, identical predictions.
-- scikit-learn (SAMME) uses alpha = ln((1 - eps)/eps), without the 1/2 of the textbook. The vote is doubled, the sign is unchanged.
+- scikit-learn (SAMME) and Bishop both use alpha = ln((1 - eps)/eps). Some texts write 1/2 ln((1 - eps)/eps); that halves the vote, the sign is unchanged.
 
 ### P4-05: Probabilities from sigmoid(vote), not `predict_proba`  (Section C.6)
 - The vote estimates the log-odds (minimiser of the exponential error), so p = sigmoid(sum alpha_m y_m). Log loss 0.436 with `predict_proba` vs 0.083 this way, same ROC-AUC.
@@ -366,3 +366,19 @@ Every design choice in `diabetes_risk.ipynb`, with the reason and the likely viv
 - HbA1c and glucose are part of how diabetes is diagnosed, so models that use them are partly circular (the first stump, HbA1c > 6.70, is never wrong about the patients it flags). The realistic screening question is risk before any blood test.
 - Same split and models on age, hypertension, heart disease, BMI, gender and smoking. BMA reuses the 64 already-fitted models without blood tests and renormalises their weights.
 - Result: every model loses about 0.15 ROC-AUC (AdaBoost 0.977 to 0.820), and plain logistic regression (0.825) is as good as the ensembles. Ensembles help when there are sharp thresholds; for screening the simple model is enough. Matches the PBL 1 no-blood-test model (0.825).
+
+### P4-10: Show that the label is almost a rule on HbA1c and glucose  (Section B.3)
+- Every patient with HbA1c >= 6.8 or glucose >= 220 is diabetic, and no non-diabetic has HbA1c above 6.6 or glucose above 200. That rule catches 66.9% of diabetic patients.
+- So the first stumps (HbA1c 6.70, glucose 210) find how the dataset was built, not new medicine. We say that instead of claiming the model rediscovered clinical cut-offs.
+
+### P4-11: 5-fold cross-validation of the model ranking  (Section C.10)
+- One split leaves differences in the third decimal open to luck. Stratified 5-fold CV on all 96,146 patients, both feature sets.
+- All features: AdaBoost 0.978 = gradient boosting 0.978 > random forest 0.972 (boosting ahead in 5 of 5 folds) > tree 0.963 > logistic regression 0.961.
+- No blood tests: gradient boosting 0.832 > logistic regression 0.830 > AdaBoost 0.827 > tree 0.820 > random forest 0.810. Gradient boosting leads logistic regression in every fold, by only 0.002.
+
+### P4-12: Noise test with two forest settings and repeated draws  (Section C.8)
+- The random forest's noise loss depends on leaf size: 0.023 with leaves of 5, 0.004 with leaves of 50. So we do not claim boosting is more robust than bagging in general; robustness here is about model capacity.
+- Three more random flips of 10% reproduce the numbers to within 0.002.
+
+### P4-13: Report a screening threshold, not only ROC-AUC  (Section E.3)
+- Without blood tests, logistic regression at threshold 0.08 finds 80.8% of diabetic patients with precision 0.198, flagging 36% of patients for a blood test. At 0.5 it finds only 5.4%.
