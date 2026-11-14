@@ -67,7 +67,8 @@ Unit 5, Combining Models: [`pbl4_boosting_bma.ipynb`](pbl4_boosting_bma.ipynb), 
 | Bayesian model averaging (logistic models) | 0.960 | 0.817 | 0.117 | 0.825 |
 | Logistic regression | | | | 0.825 |
 
-- **Realistic screening:** HbA1c and glucose are part of how diabetes is diagnosed, so the all-features numbers are inflated. Without them every model loses about 0.15 ROC-AUC, and plain logistic regression is as good as any ensemble (0.825, same as PBL 1).
+- **Realistic screening:** in this data HbA1c >= 6.8 or glucose >= 220 always means diabetic (66.9% of diabetic patients), so the all-features numbers are inflated. Without the two blood tests every model loses about 0.15 ROC-AUC, and plain logistic regression is within 0.002 of the best ensemble (0.825, same as PBL 1).
+- **Checked with 5-fold cross-validation:** boosting beats the random forest in every fold (0.978 vs 0.972); AdaBoost and gradient boosting are tied.
 
 - A hand-written AdaBoost reproduces scikit-learn exactly (500 of 500 stumps, identical predictions).
 - Boosting concentrates on diabetic patients with near-normal lab values; with 5% flipped labels, those patients hold 36% of the weight.
